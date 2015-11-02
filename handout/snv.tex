@@ -3,7 +3,7 @@
 %----------------------------------------------------------------------------------------
 
 % Define the top matter
-\setModuleTitle{Single Nucleotica Variant Call and Annotation}
+\setModuleTitle{Short Nucleotide Variant Calling, Annotation and Filtration}
 \setModuleAuthors{%
   Matt Field \mailto{}\\
   Dan Andrews \mailto{}\\
@@ -204,12 +204,19 @@ questions/interpratation
 \newpage
 
 %----------------------------------------------------------------------------------------
-%	NEXT SUBSECTION
+%	VARIANT ANNOTATION
 %----------------------------------------------------------------------------------------
 
-\section{Variant calls for example}
+\section{Variant Annotation}
 
-blurb about what we are going to do next. And a short description of the tools used and how to access it.
+The sections above have dealt with calling somatic variants from the first 10Mb of chromosome 4. This is important in finding variants that are unique to the tumour sample(s) and may have driven both tumour growth and metastasis. An important secondary question is whether the germline genome of the patient contains any variants that may have contributed to the development of the initial tumour through predisposing the patient to cancer. These variants \textit{may not} be captured by somatic variant analysis as their allele frequency may not change in the tumour genome compared with the normal.
+
+For this section, we will use variants from the first 10Mb of chromosome 4 produced using the GATK HaplotypeCaller variant caller on both the normal and tumour genomes to produce GVCF files which are fed into GATK GenotypeGVCFs to produce a merged VCF file. We will be using a pre-generated VCF file as we are primarily interested in the annotation of these variants rather than their generation. The annotation method we will use is called \textbf{Variant Effect Predictor} or VEP for short.
+
+
+
+
+We will perform variant annotation 
 
 \begin{steps}
 Step by step instruction to open the files 
