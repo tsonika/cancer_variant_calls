@@ -5,14 +5,14 @@
 % Define the top matter
 \setModuleTitle{Single Nucleotica Variant Call and Annotation}
 \setModuleAuthors{%
-  Matt Field \mailto{}\\
-  Dan Andrews \mailto{}\\
+  Matt Field \mailto{matt.field@anu.edu.au}\\
+  Dan Andrews \mailto{dan.andrews@anu.edu.au}\\
   Velimir Gayevskiy \mailto{v.gayevskiy@garvan.org.au} \\
 }
 
 \setModuleContributions{%
-  Gayle Phillip \mailto{xxx@xxx} \\
-  Sonika Tyagi \mailto{yyy@yyy}% 
+  Gayle Phillip \mailto{Sonika.Tyagi@agrf.org.au} \\
+  Sonika Tyagi \mailto{gkphilip@unimelb.edu.au}% 
 }
 
 %----------------------------------------------------------------------------------------
@@ -34,9 +34,11 @@
 After completing this practical the trainee should be able to:
 
 \begin{itemize}
-  \item LO1 
-  \item LO2 
-  \item LO3
+  \item Prepare raw BAM alignments for variant detection 
+  \item Perform QC measures on BAM files
+  \item Understand and perform simple variant detection on paired NGS data 
+  \item Add annotation information to raw variant calls
+  \item Visualise variant calls using IGV
 \end{itemize}
 
 %----------------------------------------------------------------------------------------
@@ -48,10 +50,21 @@ After completing this practical the trainee should be able to:
 \subsection{Tools Used}
 
 \begin{description}[style=multiline,labelindent=0cm,align=left,leftmargin=1cm]
-  \item[tool name] \hfill\\
-    \url{tool_url/}
+  \item[SAMTools] \hfill\\
+    \url{http://sourceforge.net/projects/samtools/}
   \item[IGV] \hfill\\
     \url{http://www.broadinstitute.org/igv/}
+  \item[Genome Analysis Toolkit] \hfill\\
+    \url{http://www.broadinstitute.org/gatk/}
+  \item[Picard] \hfill\\
+    \url{http://picard.sourceforge.net/}
+  \item[MuTect] \hfill\\
+    \url{http://www.broadinstitute.org/cancer/cga/mutect/}
+  \item[Strelka] \hfill\\
+    \url{https://sites.google.com/site/strelkasomaticvariantcaller/}
+  \item[VarScan2] \hfill\\
+    \url{https://github.com/dkoboldt/varscan/}
+
 \end{description}
 
 %------------------------------------------------
@@ -71,11 +84,13 @@ After completing this practical the trainee should be able to:
 
 \section{Introduction}
 
-The goal of this hands-on session is to 
+# This talk is based on Introduction to DNA-Seq processing for cancer data by Mathieu Bourgey, Ph.D  
 
-To ensure reasonable analysis times, we will perform the analysis on a 
+*https://bitbucket.org/mugqic/muqpic\_pipelines*
 
-In the second part of the tutorial we will also be using IGV to visualise and manually inspect 
+The goal of this hands-on session is to present the main steps that are commonly used to process and to analyze cancer sequencing data. We will focus only on whole genome data and provide command lines that allow detecting Single Nucleotide Variants (SNV). This workshop will show you how to launch individual steps of a complete DNA-Seq SNV pipeline using cancer data.
+
+In the second part of the tutorial we will also be using IGV to visualise and manually inspect candidate variant calls.
 
 %----------------------------------------------------------------------------------------
 %	THE ENVIRONMENT
@@ -83,20 +98,40 @@ In the second part of the tutorial we will also be using IGV to visualise and ma
 
 \section{Prepare the Environment}
 
-We will use a dataset derived from whole genome sequencing of a 33-yr-old lung adenocarcinoma patient, who is a never-smoker and has no familial cancer history. 
+We will use a dataset derived from whole genome sequencing of a 33-yr-old lung adenocarcinoma patient, who is a never-smoker and has no familial cancer history.
 
-The data files are contained in the subdirectory called \texttt{data} and are the following:
+The data consists of whole genome sequencing of liver metastatic lung cancer (frozen), primary lung cancer (FFPE) and blood tissue of a lung adenocarcinoma patient (AK55).
+
+The BAM alignment files are contained in the subdirectory called \texttt{alignment} and are located in the following subdirectories:
 
 \begin{description}[style=multiline,labelindent=1.5cm,align=left,leftmargin=2.5cm]
-  \item[\texttt{SM\_Blood.merged.mrkdup.realn.chr4\_1st50Mb.bam} and \texttt{SM\_Blood.merged.mrkdup.realn.chr4\_1st50Mb.bam.bai}] \hfill\\
-  \item[\texttt{SM\_liverMets.merged.mrkdup.realn.chr4\_1st50Mb.bam} and \texttt{SM\_liverMets.merged.mrkdup.realn.chr4\_1st50Mb.bam}] \hfill\\
-  These files are based on subsetting the whole genomes derived from blood and liver metastases to the first 40Mb of chromosome 4. This will allow our analyses to run in a sufficient time during the workshop, but it's worth being aware that these are just 1.25\% of the genome which highlights the length of time and resourced required to perform cancer genomics on full genomes!
+  \item[\texttt{normal/normal.sorted.bam} and \texttt{normal/normal.sorted.bam.bai}] \hfill\\
+  \item[\texttt{tumor/tumor.sorted.bam} and \texttt{tumor/tumor.sorted.bam.bai}] \hfill\\ 
 \end{description}
 
+These files are based on subsetting the whole genomes derived from blood and liver metastases to the first 50Mb of chromosome 4 (with only the first 10Mb of chr4 utilised for particularly computationally intensive steps such as variant calling!). This will allow our analyses to run in a sufficient time during the workshop, but it's worth being aware that these are just 1.25\% of the genome which highlights the length of time and resourced required to perform cancer genomics on full genomes!
+
+\begin{directory\_structure}
+The initial structure of your folders should look like this:
+
+\begin{verbatim}
+-- raw_reads/            # fastqs from the center (down sampled)
+  -- normal/              # The blood sample directory containing fastq's 
+  -- tumor/               # The tumour sample directory containing fastq's
+-- alignment/	          # bam files 
+  -- normal/              # The blood sample directory containing bam files 
+  -- tumour/               # The tumour sample directory containing bam files \\
+-- ref/                   # Contains reference genome files	     
+-- commands.sh            # cheat sheet 
+\end{verbatim}
+
+
+\end{directory\_structure}
+
 \begin{steps}
-Open the Terminal and go to the \texttt{SNV} working directory:
+Open the Terminal and go to the base \texttt{workshopCanberra} working directory:
 \begin{lstlisting}
-cd ~/SNV/
+cd ~/workshopCanberra
 \end{lstlisting}
 \end{steps}
 
@@ -104,88 +139,409 @@ cd ~/SNV/
 %\textcolor{red}{
 \begin{warning}
   All commands entered into the terminal for this tutorial should be from within the
-  \textbf{\texttt{$\sim$/SNV}} directory.
+  \textbf{\texttt{workshopCanberra}} directory.
 \end{warning}
 
 \begin{steps}
-Check that the \texttt{data} directory contains the above-mentioned files by typing:
+Check that the \texttt{alignment} directory contains the above-mentioned files by typing:
 \begin{lstlisting}
-ls data
+ls alignment
 \end{lstlisting}
 \end{steps}
+
+\begin{steps}
+Now we need to set some environment variables to save typing lengthy file paths over and over. Copy and paste the following commands into your terminal.
+\begin{lstlisting}
+export APP_ROOT=/home/training/Applications/
+
+export PATH=$PATH:$APP_ROOT/IGVTools
+
+export PICARD_PATH=$APP_ROOT/picard-tools/
+
+export SNPEFF_HOME=$APP_ROOT/snpEff/
+
+export GATK_JAR=$APP_ROOT/gatk/GenomeAnalysisTK.jar
+
+export BVATOOLS_JAR=$APP_ROOT/bvatools-1.6/bvatools-1.6-full.jar
+
+export TRIMMOMATIC_JAR=$APP_ROOT/Trimmomatic-0.33/trimmomatic-0.33.jar
+
+export STRELKA_HOME=$APP_ROOT/strelka-1.0.14/
+
+export MUTECT_JAR=$APP_ROOT/mutect-src/mutect-1.1.7.jar
+
+export VARSCAN_JAR=$APP_ROOT/varscan2/VarScan.v2.3.9.jar
+
+export REF=/home/training/workshopCanberra/ref
+\end{lstlisting}
+\end{steps}
+
 
 %----------------------------------------------------------------------------------------
 %	BAM MANIPULATION
 %----------------------------------------------------------------------------------------
 
 
-\section{BAM Pre-Processing}
+\section{BAM Files}
 
-text here..
+Let's spend some time to explore bam files.
 
-\subsection{Step 1: Pre-Processing}
+\subsection{Step 1: Exploring BAM files}
 
 \begin{steps}
 \begin{lstlisting}
-command goes here
+samtools view alignment/normal/normal.sorted.bam | head -n4
 \end{lstlisting}
 \end{steps}
 
-\begin{note}
-Explanation of parameters
-\begin{description}[style=multiline,labelindent=0cm,align=right,leftmargin=\descriptionlabelspace,rightmargin=1.5cm,font=\ttfamily]
- \item[-n] the normal BAM
- \item[-t] the tumour BAM
- \item[--fasta] the reference genome used for mapping (b37 from GATK here)
- \item[-gc] GC content as windows through the genome (pre-generated and downloadable from the Sequenza website)
-\end{description}
-\end{note}
+Here you have examples of alignment results.
+A full description of the flags can be found in the SAM specification
+\url{http://samtools.sourceforge.net/SAM1.pdf}
 
-This will take approximately 20 minutes to run...
+Another useful bit of information in the SAM is the CIGAR string.
+It's the 6th column in the file. 
 
-\begin{information}
-You can look at the first few lines of the output in the file \texttt{stage1-output.large.seqz.gz} with:
+This column explains how the alignment was achieved.
  
+        M == base aligns \textbf{but doesn't have to be a match.} A SNP will have an M even if it disagrees with the reference.\\
+        I == Insertion\\
+        D == Deletion\\
+        S == soft-clips. These are handy to find un removed adapters, viral insertions, etc.
+
+An in depth explanation of the CIGAR can be found \url{http://genome.sph.umich.edu/wiki/SAM}
+
+The exact details of the cigar string can be found in the SAM spec as well.
+
+
+We won't go into too much detail at this point since we want to concentrate on cancer specific issues now.
+
+
+Now, you can try using picards explain flag site to understand what is going on with your reads
+\url{http://broadinstitute.github.io/picard/explain-flags.html}
+
+\textbf{QUESTION:} There are 3 unique flags, what do they mean? The flag is the second column\\ \\
+\textbf{129:}\\ 
+    read paired\\
+    second in pair\\ \\
+\textbf{113:}\\
+    read paired\\
+    read reverse strand\\
+    mate reverse strand\\
+    first in pair\\ \\
+\textbf{161:}\\
+    read paired\\
+    mate reverse strand\\
+    second in pair\\
+
+There are lots of different flags, let's look at a few more
 \begin{lstlisting}
-command goes here
+samtools view alignment/normal/normal.sorted.bam | head -n100
 \end{lstlisting}
-\end{information}
 
-%------------------------------------------------
 
-\subsection{Step 2: whatever..}
-
-\begin{steps}
+\textbf{QUESTION:} Let's take the last one, which looks properly paired and find it's mate pair. \\
+[HINT: Instead of using 'head' what unix command could we pipe the otput to?]
 \begin{lstlisting}
-command goes here
+samtools view alignment/normal/normal.sorted.bam | grep HWI-ST478_0133:4:2205:14675:32513
 \end{lstlisting}
-\end{steps}
 
-%\reversemarginpar\marginpar{\vskip+0em\hfill\includegraphics[height=1cm]{graphics/notes.png}}
+\textbf{QUESTION:} Using the cigar string, what can we tell about the alignment of the mate pair? How might the alignment information from the original read be used by the aligner?\\
+The mate pair has a less convincing alignment with two insertions and soft clipping reported.
+
+Even though the alignment of the mate pair is questionable the presence of it's properly paired mate helps the aligner in deciding where to put the read. 
+
+You can use samtools to filter reads as well.
+
+\textbf{QUESTION:} How many reads mapped and unmapped were there? \\
+[HINT: Look at the samtools view help menu by typing samtools view without any arguments] \\
+\begin{lstlisting}
+samtools view -c -f4 alignment/normal/normal.sorted.bam
+\end{lstlisting}
+77229 \\
+
+\begin{lstlisting}
+samtools view -c -F4 alignment/normal/normal.sorted.bam
+\end{lstlisting}
+22972373 \\
+
+\subsection{Step 2: Pre-processing: Indel Realignment}
+The first step for this is to realign around indels and snp dense regions.\\
+The Genome Analysis toolkit has a tool for this called IndelRealigner. \\
+It basically runs in 2 steps: \\
+   1. Find the targets \\
+   2. Realign them \\
+
+\begin{lstlisting}
+java -Xmx2G  -jar ${GATK_JAR} \
+  -T RealignerTargetCreator \
+  -R ${REF}/human_g1k_v37.fasta \
+  -o alignment/normal/realign.intervals \
+  -I alignment/normal/normal.sorted.bam \
+  -I alignment/tumuor/tumour.sorted.bam \
+  -L ${REF}/human_g1k_v37.intervals
+
+java -Xmx2G -jar ${GATK_JAR} \
+  -T IndelRealigner \
+  -R ${REF}/human_g1k_v37.fasta \
+  -targetIntervals alignment/normal/realign.intervals \
+  --nWayOut .realigned.bam \
+  -I alignment/normal/normal.sorted.bam \
+  -I alignment/tumour/tumour.sorted.bam \
+  -L ${REF}/human_g1k_v37.intervals
+
+  mv normal.sorted.realigned.ba* alignment/normal/
+  mv tumour.sorted.realigned.ba* alignment/tumour/
+\end{lstlisting}
+
+
 \begin{note}
 Explanation of parameters
 \begin{description}[style=multiline,labelindent=0cm,align=right,leftmargin=\descriptionlabelspace,rightmargin=1.5cm,font=\ttfamily]
- \item[-w] the window size (50 for exomes, 200 for genomes)
- \item[-s] the large seqz file generated in the first step
+ \item[-I] BAM file(s)
+ \item[-T] GATK algorithm to run
+ \item[-R] the reference genome used for mapping (b37 from GATK here)
+ \item[-jar] Path to GATK jar file
+ \item[-L] Genomic intervals to operate on
 \end{description}
 \end{note}
 
-This step should take approximately X minutes to complete.
+This will take approximately NN minutes to run... \\
 
-%------------------------------------------------
+\textbf{QUESTION:} Why did we use both normal and tumor together? \\
 
-\subsection{Step 3: something}
+Because if a region needs realignment, maybe one of the sample in the pair has less reads or was excluded from the target creation. \\
+This makes sure the normal and tumor are all in-sync for the somatic calling step. \\
 
-\begin{steps}
-Open the R terminal
+\textbf{QUESTION:} How many regions did it think needed cleaning ?
 \begin{lstlisting}
-command
+wc -l alignment/normal/realign.intervals -> 27300
 \end{lstlisting}
-\end{steps}
 
-commands for R
+Indel Realigner also makes sure the called deletions are left aligned when there is a microsatellite or homopolymer.
 
-%----------------------------------------------------------------------------------------
+\begin{verbatim}
+This
+ATCGAAAA-TCG
+into
+ATCG-AAAATCG
+
+or
+ATCGATATATATA--TCG
+into
+ATCG--ATATATATATCG
+\end{verbatim}
+
+
+\textbf{QUESTION:} Why it is important ?
+This makes it easier for down stream analysis tools
+
+For NGS analysis, the convention is to left align indels. 
+
+This is only really needed when calling variants with legacy locus-based tools such as samtools or GATK UnifiedGenotyper. Otherwise you will have worse performance and accuracy.
+
+With more sophisticated tools (like GATK HaplotypeCaller) that involve reconstructing haplotypes (eg through reassembly), the problem of multiple valid representations is handled internally and does not need to be corrected explicitly.
+
+\subsection{Step 3: Pre-processing: Fixmates}
+
+Some read entries don't have their mate information written properly. \\
+
+We use Picard to do this: \\
+
+# Fix Mate 
+\begin{lstlisting}
+java -Xmx2G -jar ${PICARD_PATH}/FixMateInformation.jar \
+  VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
+  INPUT=alignment/normal/normal.sorted.realigned.bam \
+  OUTPUT=alignment/normal/normal.matefixed.bam
+
+java -Xmx2G -jar ${PICARD_PATH}/FixMateInformation.jar \
+  VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
+  INPUT=alignment/tumour/tumour.sorted.realigned.bam \
+  OUTPUT=alignment/tumour/tumour.matefixed.bam
+\end{lstlisting}
+
+\subsection{Step 4: Pre-processing: Mark Duplicates}
+
+**What are duplicate reads ?** [Solution](solutions/_markdup1.md)
+
+**What are they caused by ?** [Solution](solutions/_markdup2.md)
+
+**What are the ways to detect them ?** [Solution](solutions/_markdup3.md)
+
+Here we will use picards approach:
+
+TODO: Update paths -> TIME 1 minute
+# Mark Duplicates
+\begin{lstlisting}
+java -Xmx2G -jar ${PICARD_PATH}/MarkDuplicates.jar \
+  REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
+  INPUT=alignment/normal/normal.matefixed.bam \
+  OUTPUT=alignment/normal/normal.sorted.dup.bam \
+  METRICS_FILE=alignment/normal/normal.sorted.dup.metrics
+
+java -Xmx2G -jar ${PICARD_PATH}/MarkDuplicates.jar \
+  REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
+  INPUT=alignment/tumour/tumour.matefixed.bam \
+  OUTPUT=alignment/tumour/tumour.sorted.dup.bam \
+  METRICS_FILE=alignment/tumour/tumour.sorted.dup.metrics
+\end{lstlisting}
+
+
+We can look in the metrics output to see what happened.
+
+\begin{lstlisting}
+less alignment/normal/normal.sorted.dup.metrics
+```
+
+**How many duplicates were there ?** [Solution](solutions/_markdup4.md)
+
+We can see that it computed separate measures for each library.
+ 
+**Why is this important to do not combine everything ?** [Solution](solutions/_markdup5.md)
+
+[Note on Duplicate rate](notes/_marduop1.md)
+
+\subsection{Step 4: Pre-processing: Base Quality Recalibration}
+
+**Why do we need to recalibrate base quality scores ?** [Solution](solutions/_recal1.md)
+
+
+It runs in 2 steps, 
+1- Build covariates based on context and known snp sites
+2- Correct the reads based on these metrics
+
+
+GATK BaseRecalibrator:
+
+# Recalibrate
+TODO: Update paths ->  TIME 11 min
+
+\begin{lstlisting}
+for i in normal tumour
+do
+  java -Xmx2G -jar ${GATK_JAR} \
+    -T BaseRecalibrator \
+    -nct 2 \
+    -R ${REF}/human_g1k_v37.fasta \
+    -knownSites ${REF}/dbSnp-138_chr4.vcf \
+    -L 4:1-10000000 \
+    -o alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
+    -I alignment/${i}/${i}.sorted.dup.bam
+
+    java -Xmx2G -jar ${GATK_JAR} \
+      -T PrintReads \
+      -nct 2 \
+      -R ${REF}/human_g1k_v37.fasta \
+      -BQSR alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
+      -o alignment/${i}/${i}.sorted.dup.recal.bam \
+      -I alignment/${i}/${i}.sorted.dup.bam
+done
+\end{lstlisting}
+
+\section{BAM QC}
+
+Once your whole bam is generated, it's always a good thing to check the data again to see if everything makes sense.
+
+\subsection{Step 1: BAM QC: Compute Coverage}
+If you have data from a capture kit, you should see how well your targets worked. Both GATK and BVATools have depth of coverage tools. 
+Here we'll use the GATK one
+TODO: TIME -> 4 minutes
+\begin{lstlisting}
+# Get Depth
+for i in normal tumour
+do
+  java  -Xmx2G -jar ${GATK_JAR} \
+    -T DepthOfCoverage \
+    --omitDepthOutputAtEachBase \
+    --summaryCoverageThreshold 10 \
+    --summaryCoverageThreshold 25 \
+    --summaryCoverageThreshold 50 \
+    --summaryCoverageThreshold 100 \
+    --start 1 --stop 500 --nBins 499 -dt NONE \
+    -R ${REF}/human_g1k_v37.fasta \
+    -o alignment/${i}/${i}.sorted.dup.recal.coverage \
+    -I alignment/${i}/${i}.sorted.dup.recal.bam \
+    -L 4:1-10000000
+done
+\end{lstlisting}
+[note on DepthOfCoverage command](notes/_DOC.md)
+
+Coverage is the expected ~25x in these project
+
+Look at the coverage:
+
+\begin{lstlisting}
+less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summary
+less -S alignment/tumour/tumour.sorted.dup.recal.coverage.sample_interval_summary
+\end{lstlisting}
+
+**Is the coverage fit with the expectation ?** [solution](solutions/_DOC1.md)
+
+\subsection{Step 2: BAM QC: Insert Size}
+It tells you if your library worked
+## Insert Size
+It corresponds to the size of DNA fragments sequenced.
+
+Different from the gap size (= distance between reads) !
+
+These metrics are computed using Picard:
+TODO -> TIME 2 minutes
+\begin{lstlisting}
+# Get insert size
+for i in normal tumour
+do
+  java -Xmx2G -jar ${PICARD_PATH}/CollectInsertSizeMetrics.jar \
+    VALIDATION_STRINGENCY=SILENT \
+    REFERENCE_SEQUENCE=${REF}/human_g1k_v37.fasta \
+    INPUT=alignment/${i}/${i}.sorted.dup.recal.bam \
+    OUTPUT=alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.tsv \
+    HISTOGRAM_FILE=alignment/${i}/${i}.sorted.dup.recal.metric.insertSize.histo.pdf \
+    METRIC_ACCUMULATION_LEVEL=LIBRARY
+done
+\end{lstlisting}
+
+look at the output
+
+\begin{lstlisting}
+less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
+less -S alignment/tumour/tumour.sorted.dup.recal.metric.insertSize.tsv
+\end{lstlisting}
+
+There is something interesting going on with our library ERR.
+
+**Can you tell what it is?** [Solution](solutions/_insert1.md)
+
+\subsection{Step 3: BAM QC: Alignment metrics}
+It tells you if your sample and you reference fit together
+## Alignment metrics
+For the alignment metrics, samtools flagstat is very fast but with bwa-mem since some reads get broken into pieces, the numbers are a bit confusing. 
+
+We prefer the Picard way of computing metrics:
+TODO -> TIME 
+\begin{lstlisting}
+# Get alignment metrics
+for i in normal tumour
+do
+  java -Xmx2G -jar ${PICARD_PATH}/CollectAlignmentSummaryMetrics.jar \
+    VALIDATION_STRINGENCY=SILENT \
+    REFERENCE_SEQUENCE=${REF}/human_g1k_v37.fasta \
+    INPUT=alignment/${i}/${i}.sorted.dup.recal.bam \
+    OUTPUT=alignment/${i}/${i}.sorted.dup.recal.metric.alignment.tsv \
+    METRIC_ACCUMULATION_LEVEL=LIBRARY
+done
+\end{lstlisting}
+
+explore the results
+
+\begin{lstlisting}
+less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
+less -S alignment/tumour/tumour.sorted.dup.recal.metric.alignment.tsv
+
+\end{lstlisting}
+
+**Do you think the sample and the reference genome fit together ?** [Solution](solutions/_alnMetrics1.md)
+
+
 
 \newpage
 
@@ -193,39 +549,168 @@ commands for R
 %	VISUALISATION
 %----------------------------------------------------------------------------------------
 
-\section{for example Visualisation}
+\section{Variant Calling}
 
-view PDFs
+# Variant calling
 
-questions/interpratation
+![SNV call summary workflow](img/snv_call.png)
 
-%----------------------------------------------------------------------------------------
+Most of SNV caller use either a Baysian, a threshold or a t-test approach to do the calling
+
+ Here we will try 3 variant callers.
+- Varscan 2
+- MuTecT
+- Strelka
+
+Other candidates
+- Virmid
+- Somatic sniper
+
+many, MANY others can be found here:
+https://www.biostars.org/p/19104/
+
+
+In our case, let's start with:
+
+\begin{lstlisting}
+mkdir variant_calling
+\end{lstlisting}
+
+## varscan 2
+
+VarScan calls somatic variants (SNPs and indels) using a heuristic method and a statistical test based on the number of aligned reads supporting each allele.
+
+
+Varscan somatic caller expects both a normal and a tumour file in SAMtools pileup format. from sequence alignments in binary alignment/map (BAM) format. To build a pileup file, you will need:
+
+- A SAM/BAM file ("myData.bam") that has been sorted using the sort command of SAMtools.
+- The reference sequence ("reference.fasta") to which reads were aligned, in FASTA format.
+- The SAMtools software package.
+
+
+\begin{lstlisting}
+# SAMTools mpileup
+for i in normal tumour
+do
+samtools mpileup -L 1000 -B -q 1 \
+  -f ${REF}/human_g1k_v37.fasta \
+  -r 4:1-10000000 \
+  alignment/${i}/${i}.sorted.dup.recal.bam \
+  > variant_calling/${i}.mpileup
+done
+
+TODO: TIME -> 5 minutes
+# varscan
+java -Xmx2G -jar ${VARSCAN_JAR} somatic variant_calling/normal.mpileup variant_calling/tumour.mpileup variant_calling/varscan --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
+\end{lstlisting}
+
+[note on samtools mpileup and bcftools command](notes/_mpileup.md)
+
+## Broad MuTecT
+TODO: TIME -> 5 minutes
+\begin{lstlisting}
+# Variants MuTecT
+# Note MuTecT only works with Java 6, 7 will give you an error
+# if you get "Comparison method violates its general contract!
+# you used java 7"
+java -Xmx2G -jar ${MUTECT_JAR} \
+  -T MuTect \
+  -R ${REF}/human_g1k_v37.fasta \
+  -dt NONE -baq OFF --validation_strictness LENIENT -nt 2 \
+  --dbsnp ${REF}/dbSnp-138_chr4.vcf \
+  --input_file:normal alignment/normal/normal.sorted.dup.recal.bam \
+  --input_file:tumor alignment/tumour/tumour.sorted.dup.recal.bam \
+  --out variant_calling/mutect.call_stats.txt \
+  --coverage_file variant_calling/mutect.wig.txt \
+  -pow variant_calling/mutect.power \
+  -vcf variant_calling/mutect.vcf \
+  -L 4:1-10000000
+\end{lstlisting}
+
+## Illumina Strelka
+
+\begin{lstlisting}
+# Variants Strelka
+cp ${STRELKA_HOME}/etc/strelka_config_bwa_default.ini ./
+# Fix ini since we subsampled
+sed 's/isSkipDepthFilters =.*/isSkipDepthFilters = 1/g' -i strelka_config_bwa_default.ini
+
+${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
+  --normal=alignment/normal/normal.sorted.dup.recal.bam \
+  --tumor=alignment/tumour/tumour.sorted.dup.recal.bam \
+  --ref=${REF}/human_g1k_v37.fasta \
+  --config=$(pwd)/strelka_config_bwa_default.ini \
+  --output-dir=variant_calling/strelka/
+
+  cd variant_calling/strelka/
+  make -j2
+  cd ../..
+
+  cp variant_calling/strelka/results/passed.somatic.snvs.vcf variant_calling/strelka.vcf
+\end{lstlisting}
+
+Now we have variants from all three methods. Let's compress and index the vcfs for future visualisation.
+
+\begin{lstlisting}
+for i in variant_calling/*.vcf;do bgzip -c $i > $i.gz ; tabix -p vcf $i.gz;done
+\end{lstlisting}
+
+Let's look at a compressed vcf.
+
+\begin{lstlisting}
+zless -S variant_calling/varscan.snp.vcf.gz
+\end{lstlisting}
+Details on the spec can be found here:
+http://vcftools.sourceforge.net/specs.html
+
+Fields vary from caller to caller.
+ 
+Some values are are almost always there: 
+ 
+   - The ref vs alt alleles, 
+   - variant quality (QUAL column)
+   - The per-sample genotype (GT) values.
+
+[note on the vcf format fields](notes/_vcf1.md)
+
 
 \newpage
 
-%----------------------------------------------------------------------------------------
-%	NEXT SUBSECTION
-%----------------------------------------------------------------------------------------
+\section{Variant Visualisation}
 
-\section{Variant calls for example}
+The Integrative Genomics Viewer (IGV) is an efficient visualization tool for interactive exploration of large genome datasets. 
 
-blurb about what we are going to do next. And a short description of the tools used and how to access it.
+![IGV browser presentation](img/igv.png)
 
-\begin{steps}
-Step by step instruction to open the files 
+Before jumping into IGV, we'll generate a track IGV can use to plot coverage:
+TODO: Check igvtools works on command line
 
+# Coverage Track
 \begin{lstlisting}
-command
+for i in normal tumour
+do
+  igvtools count \
+    -f min,max,mean \
+    alignment/${i}/${i}.sorted.dup.recal.bam \
+    alignment/${i}/${i}.sorted.dup.recal.bam.tdf \
+    b37
+done
 \end{lstlisting}
-\end{steps}
 
-text
 
-\begin{note}
-Please note that the output files you are creating are saved in your present working directory. If you are not sure where you are in the file system try typing \texttt{pwd} on your command prompt to find out.
-\end{note}
+Then:
+ 
+   1. Open IGV
+   2. Chose the reference genome corresponding to those use for alignment (b37)
+   3. Load bam file
+   4. Load vcf files
 
-%----------------------------------------------------------------------------------------
+Explore/play with the data: 
+ 
+   - find somatic variants
+    - Look around...
+
+[solution](solutions/_igv1.md)
 
 \newpage
 
@@ -239,3 +724,6 @@ Please note that the output files you are creating are saved in your present wor
 \begin{enumerate}
   \item Ju YS1, Lee WC, Shin JY, Lee S, Bleazard T, Won JK, Kim YT, Kim JI, Kang JH, Seo JS. A transforming KIF5B and RET gene fusion in lung adenocarcinoma revealed from whole-genome and transcriptome sequencing. Genome Res. 2012 Mar;22(3):436-45. 
 \end{enumerate}
+
+\section{Acknowledgements}
+This tutorial is an adaptation of the one created by Louis letourneau \url[https://github.com/lletourn/Workshops/tree/ebiCancerWorkshop201407doc/01-SNVCalling.md]. I would like to thank and acknowledge Louis for this help and for sharing his material. The format of the tutorial has been inspired from Mar Gonzalez Porta. I also want to acknowledge Joel Fillon, Louis Letrouneau (again), Francois Lefebvre, Maxime Caron and Guillaume Bourque for the help in building these pipelines and working with all the various datasets.
