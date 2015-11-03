@@ -714,6 +714,88 @@ Explore/play with the data:
 
 \newpage
 
+
+
+
+
+%----------------------------------------------------------------------------------------
+%	VARIANT ANNOTATION
+%----------------------------------------------------------------------------------------
+
+\section{Variant Annotation}
+
+Following variant calling, we end up with a VCF file of genomic coordinates with the genotype(s) and quality information for each variant. By itself, this information is not much use to us unless there is a specific genomic location we are interested in. Generally, we next want to annotate these variants to determine whether they impact any genes and if so what is their level of impact (e.g. are they causing a premature stop codon gain or are they missense mutations).
+
+The sections above have dealt with calling somatic variants from the first 10Mb of chromosome 4. This is important in finding variants that are unique to the tumour sample(s) and may have driven both tumour growth and/or metastasis. An important secondary question is whether the germline genome of the patient contains any variants that may have contributed to the development of the initial tumour through predisposing the patient to cancer. These variants \textit{may not} be captured by somatic variant analysis as their allele frequency may not change in the tumour genome compared with the normal.
+
+For this section, we will use \textbf{all} variants from the first 60Mb of chromosome 5 produced using the GATK HaplotypeCaller variant caller on both the normal and tumour genomes to produce GVCF files which are fed into GATK GenotypeGVCFs to produce a merged VCF file. We will be using a pre-generated VCF file as we are primarily interested in the annotation of these variants rather than their generation. The annotation method we will use is called \textbf{Variant Effect Predictor} or VEP for short and is available from Ensembl here: \url{http://ensembl.org/info/docs/tools/vep/index.html}{http://ensembl.org/info/docs/tools/vep/index.html}.
+
+\begin{steps}
+Our pre-generated VCF file is located in the [TODO] folder. Lets have a quick look at the variants:
+\begin{lstlisting}
+less /[TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vcf.gz
+\end{lstlisting}
+\end{steps}
+
+Notice how there are two genotype blocks at the end of each line for the normal (Blood) and tumour (liverMets) samples.
+
+Let's now run VEP on this VCF file to annotate each variant with its impact(s) on the genome.
+
+\begin{steps}
+\begin{lstlisting}
+/vep/variant_effect_predictor.pl -i [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vcf.gz --vcf -o [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.vcf --stats_file [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.html --offline --fork 4 --no_progress --canonical --sift b --polyphen b --symbol --numbers --terms so --biotype --total_length --plugin LoF,human_ancestor_fa:false --fields Consequence,Codons,Amino_acids,Gene,SYMBOL,Feature,EXON,PolyPhen,SIFT,Protein_position,BIOTYPE,CANONICAL,Feature_type,cDNA_position,CDS_position,Existing_variation,DISTANCE,STRAND,CLIN_SIG,LoF_flags,LoF_filter,LoF,RadialSVM_score,RadialSVM_pred,LR_score,LR_pred,CADD_raw,CADD_phred,Reliability_index,HGVSc,HGVSp --fasta [TODO]/human_g1k_v37.fasta
+\end{lstlisting}
+\end{steps}
+
+VEP will take approximately 10 minutes to run and once it is finished you will have a new VCF file with all of the information in the input file but with added annotations in the INFO block. VEP also produces an HTML report summarising the distribution and impact of variants identified.
+
+\begin{steps}
+Once VEP is done running, lets first look at the HTML report it produced with the following command:
+\begin{lstlisting}
+run [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.html
+\end{lstlisting}
+\end{steps}
+
+[TODO description of HTML]
+
+\begin{steps}
+Now lets look at the variant annotations that VEP has added to the VCF file by focussing on a single variant. Lets fetch one variant from the original VCF file and the annotated VCF file.
+\begin{lstlisting}
+zcat [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vcf.gz | grep '^5\textbackslash t174106\textbackslash t'
+grep '^5\textbackslash t174106\textbackslash t' [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.vcf
+\end{lstlisting}
+\end{steps}
+
+These commands give us the original variant:
+5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ_MEAN=127.00;GQ_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
+
+and the same variant annotated is:
+5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ_MEAN=127.00;GQ_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446;CSQ=missense_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|benign(0.033)|deleterious(0.04)|1076/1271|protein_coding|YES|Transcript|3277/11513|3227/3816|||1||||||||||||ENST00000283426.6:c.3227G>A|ENSP00000283426.6:p.Arg1076Gln,non_coding_transcript_exon_variant&non_coding_transcript_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained_intron||Transcript|1106/2165||||1||||||||||||ENST00000504041.1:n.1106G>A|	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
+
+You can see that all VEP has added is:
+CSQ=missense_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|benign(0.033)|deleterious(0.04)|1076/1271|protein_coding|YES|Transcript|3277/11513|3227/3816|||1||||||||||||ENST00000283426.6:c.3227G>A|ENSP00000283426.6:p.Arg1076Gln,non_coding_transcript_exon_variant&non_coding_transcript_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained_intron||Transcript|1106/2165||||1||||||||||||ENST00000504041.1:n.1106G>A|
+
+This is further composed of two annotations for this variant:
+missense_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|benign(0.033)|deleterious(0.04)|1076/1271|protein_coding|YES|Transcript|3277/11513|3227/3816|||1||||||||||||ENST00000283426.6:c.3227G>A|ENSP00000283426.6:p.Arg1076Gln
+
+and
+
+non_coding_transcript_exon_variant&non_coding_transcript_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained_intron||Transcript|1106/2165||||1||||||||||||ENST00000504041.1:n.1106G>A|
+
+The first of these is saying that this variant is a missense variant in the gene PLEKHG4B for the transcript ENST00000283426 and the second that it is also a non_coding_transcript_exon_variant in the transcript ENST00000504041.
+
+%----------------------------------------------------------------------------------------
+%	VARIANT FILTRATION
+%----------------------------------------------------------------------------------------
+
+\section{Variant Filtration}
+
+We now have a VCF file where each variant has been annotated with its impact(s) on one or more genes. 
+
+%----------------------------------------------------------------------------------------
+
+\newpage
+
 %----------------------------------------------------------------------------------------
 %	REFERENCES
 %----------------------------------------------------------------------------------------
