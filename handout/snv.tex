@@ -219,7 +219,10 @@ We won't go into too much detail at this point since we want to concentrate on c
 Now, you can try using picards explain flag site to understand what is going on with your reads
 \url{http://broadinstitute.github.io/picard/explain-flags.html}
 
-\textbf{QUESTION:} There are 3 unique flags, what do they mean? The flag is the second column\\ \\
+\begin{question} 
+There are 3 unique flags, what do they mean? The flag is the second column.
+\end{question}
+\begin{answer}
 \textbf{129:}\\ 
     read paired\\
     second in pair\\ \\
@@ -232,37 +235,54 @@ Now, you can try using picards explain flag site to understand what is going on 
     read paired\\
     mate reverse strand\\
     second in pair\\
+\end{answer}
 
-There are lots of different flags, let's look at a few more
+There are lots of possible different flags, let's look at a few more
 \begin{lstlisting}
 samtools view alignment/normal/normal.sorted.bam | head -n100
 \end{lstlisting}
 
 
-\textbf{QUESTION:} Let's take the last one, which looks properly paired and find it's mate pair. \\
+\begin{question} 
+Let's take the last one, which looks properly paired and find it's mate pair. \\
 [HINT: Instead of using 'head' what unix command could we pipe the otput to?]
+\end{question}
+\begin{answer}
 \begin{lstlisting}
 samtools view alignment/normal/normal.sorted.bam | grep HWI-ST478_0133:4:2205:14675:32513
 \end{lstlisting}
+\end{answer}
 
-\textbf{QUESTION:} Using the cigar string, what can we tell about the alignment of the mate pair? How might the alignment information from the original read be used by the aligner?\\
+\begin{question} 
+Using the cigar string, what can we tell about the alignment of the mate pair?
+\end{question}
+\begin{answer}
 The mate pair has a less convincing alignment with two insertions and soft clipping reported.
+\end{answer}
 
-Even though the alignment of the mate pair is questionable the presence of it's properly paired mate helps the aligner in deciding where to put the read. 
+\begin{question} 
+How might the alignment information from the original read be used by the aligner?
+\end{question}
+\begin{answer}
+Even though the alignment of the mate pair is questionable the presence of it's properly paired mate helps the aligner in deciding where to put the less-certain read. 
+\end{answer}
 
 You can use samtools to filter reads as well.
 
-\textbf{QUESTION:} How many reads mapped and unmapped were there? \\
-[HINT: Look at the samtools view help menu by typing samtools view without any arguments] \\
+\begin{question} 
+How many reads mapped and unmapped were there? \\
+[HINT: Look at the samtools view help menu by typing samtools view without any arguments]
+\end{question}
+\begin{answer}
 \begin{lstlisting}
 samtools view -c -f4 alignment/normal/normal.sorted.bam
 \end{lstlisting}
-77229 \\
-
+77229
 \begin{lstlisting}
 samtools view -c -F4 alignment/normal/normal.sorted.bam
 \end{lstlisting}
-22972373 \\
+22972373
+\end{answer}
 
 \subsection{Step 2: Pre-processing: Indel Realignment}
 The first step for this is to realign around indels and snp dense regions.\\
@@ -307,15 +327,22 @@ Explanation of parameters
 
 This will take approximately NN minutes to run... \\
 
-\textbf{QUESTION:} Why did we use both normal and tumor together? \\
-
+\begin{question} 
+Why did we use both normal and tumor together?
+\end{question}
+\begin{answer}
 Because if a region needs realignment, maybe one of the sample in the pair has less reads or was excluded from the target creation. \\
-This makes sure the normal and tumor are all in-sync for the somatic calling step. \\
+This makes sure the normal and tumor are all in-sync for the somatic calling step. 
+\end{answer}
 
-\textbf{QUESTION:} How many regions did it think needed cleaning ?
+\begin{question} 
+How many regions did it think needed cleaning ? 
+\end{question}
+\begin{answer}
 \begin{lstlisting}
 wc -l alignment/normal/realign.intervals -> 27300
 \end{lstlisting}
+\end{answer}
 
 Indel Realigner also makes sure the called deletions are left aligned when there is a microsatellite or homopolymer.
 
@@ -332,7 +359,10 @@ ATCG--ATATATATATCG
 \end{verbatim}
 
 
-\textbf{QUESTION:} Why it is important ?
+\begin{question} 
+Why it is important ? 
+\end{question}
+\begin{answer}
 This makes it easier for down stream analysis tools
 
 For NGS analysis, the convention is to left align indels. 
@@ -340,14 +370,13 @@ For NGS analysis, the convention is to left align indels.
 This is only really needed when calling variants with legacy locus-based tools such as samtools or GATK UnifiedGenotyper. Otherwise you will have worse performance and accuracy.
 
 With more sophisticated tools (like GATK HaplotypeCaller) that involve reconstructing haplotypes (eg through reassembly), the problem of multiple valid representations is handled internally and does not need to be corrected explicitly.
+\end{answer}
 
 \subsection{Step 3: Pre-processing: Fixmates}
 
 Some read entries don't have their mate information written properly. \\
+We use Picard to do this: 
 
-We use Picard to do this: \\
-
-# Fix Mate 
 \begin{lstlisting}
 java -Xmx2G -jar ${PICARD_PATH}/FixMateInformation.jar \
   VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
@@ -362,16 +391,36 @@ java -Xmx2G -jar ${PICARD_PATH}/FixMateInformation.jar \
 
 \subsection{Step 4: Pre-processing: Mark Duplicates}
 
-**What are duplicate reads ?** [Solution](solutions/_markdup1.md)
+\begin{question}
+What are duplicate reads ?
+\end{question}
+\begin{answer}
+Different read pairs representing the same initial DNA fragment.
+\end{answer}
 
-**What are they caused by ?** [Solution](solutions/_markdup2.md)
+\begin{question} 
+What are they caused by ?
+\end{question}
+\begin{answer}
+PCR reactions (PCR duplicates) \\
+Some clusters that are thought of being separate in the flowcell but are the same (optical duplicates)
+\end{answer}
 
-**What are the ways to detect them ?** [Solution](solutions/_markdup3.md)
+\begin{question} 
+What are the ways to detect them ?
+\end{question}
+\begin{answer}
+Picard and samtools uses the alignment positions: \\
+   - Both 5' ends of both reads need to have the same positions. \\ 
+   - Each reads have to be on the same strand as well. \\ \\
+Another method is to use a kmer approach: \\
+   - take a part of both ends of the fragment \\
+   - build a hash table  \\
+   - count the similar hits \\ \\
+Brute force, compare all the sequences.
+\end{answer}
 
 Here we will use picards approach:
-
-TODO: Update paths -> TIME 1 minute
-# Mark Duplicates
 \begin{lstlisting}
 java -Xmx2G -jar ${PICARD_PATH}/MarkDuplicates.jar \
   REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
@@ -391,30 +440,45 @@ We can look in the metrics output to see what happened.
 
 \begin{lstlisting}
 less alignment/normal/normal.sorted.dup.metrics
-```
+\end{lstlisting}
 
-**How many duplicates were there ?** [Solution](solutions/_markdup4.md)
+\begin{question} 
+What percent of reads are duplicates?
+\end{question}
+\begin{answer}
+0.46\%
+\end{answer}
 
-We can see that it computed separate measures for each library.
- 
-**Why is this important to do not combine everything ?** [Solution](solutions/_markdup5.md)
+\begin{question} 
+Often, we have multiple libraries and when this occurs separate measures are calculated for each library. Why is this important to do not combine everything ?
+\end{question}
+\begin{answer}
+Each library represents a set of different DNA fragments.
 
-[Note on Duplicate rate](notes/_marduop1.md)
+Each library involves different PCR reactions
+
+So PCR duplicates can not occur between fragment of two different libraries.
+
+But similar fragment could be found between libraries when the coverage is high.
+\end{answer}
+
 
 \subsection{Step 4: Pre-processing: Base Quality Recalibration}
 
-**Why do we need to recalibrate base quality scores ?** [Solution](solutions/_recal1.md)
+\begin{question}
+Why do we need to recalibrate base quality scores ?
+\end{question}
+\begin{answer}
+The vendors tend to inflate the values of the bases in the reads.
+ 
+The recalibration tries to lower the scores of some biased motifs for some technologies.
+\end{answer}
 
-
-It runs in 2 steps, 
-1- Build covariates based on context and known snp sites
+It runs in 2 steps, \\
+1- Build covariates based on context and known snp sites \\
 2- Correct the reads based on these metrics
 
-
 GATK BaseRecalibrator:
-
-# Recalibrate
-TODO: Update paths ->  TIME 11 min
 
 \begin{lstlisting}
 for i in normal tumour
@@ -443,9 +507,8 @@ done
 Once your whole bam is generated, it's always a good thing to check the data again to see if everything makes sense.
 
 \subsection{Step 1: BAM QC: Compute Coverage}
-If you have data from a capture kit, you should see how well your targets worked. Both GATK and BVATools have depth of coverage tools. 
+If you have data from a capture kit, you should see how well your targets worked. Both GATK and BVATools have depth of coverage tools. \\
 Here we'll use the GATK one
-TODO: TIME -> 4 minutes
 \begin{lstlisting}
 # Get Depth
 for i in normal tumour
@@ -464,9 +527,18 @@ do
     -L 4:1-10000000
 done
 \end{lstlisting}
-[note on DepthOfCoverage command](notes/_DOC.md)
+\begin{note}
+Explanation of parameters
+\begin{description}[style=multiline,labelindent=0cm,align=right,leftmargin=\descriptionlabelspace,rightmargin=1.5cm,font=\ttfamily]
+ \item[--omitBaseOutput] Do not output depth of coverage at each base
+ \item[--summaryCoverageThreshold] Coverage threshold (in percent) for summarizing statistics
+ \item[-dt] down sampling
+ \item[-L] Genomic intervals to operate on
+\end{description}
+\end{note}
 
-Coverage is the expected ~25x in these project
+
+Coverage is expected to be ~25x in these project
 
 Look at the coverage:
 
@@ -475,17 +547,24 @@ less -S alignment/normal/normal.sorted.dup.recal.coverage.sample_interval_summar
 less -S alignment/tumour/tumour.sorted.dup.recal.coverage.sample_interval_summary
 \end{lstlisting}
 
-**Is the coverage fit with the expectation ?** [solution](solutions/_DOC1.md)
+\begin{question}
+Is the coverage fit with the expectation ?
+\end{question}
+\begin{answer}
+Yes the mean coverage of the region is 25x:
+
+summaryCoverageThreshold is a useful function to see if your coverage is uniform.
+ 
+Another way is to compare the mean to the median. If both are quite different that means something is wrong in your coverage.
+\end{answer}
 
 \subsection{Step 2: BAM QC: Insert Size}
-It tells you if your library worked
-## Insert Size
 It corresponds to the size of DNA fragments sequenced.
 
 Different from the gap size (= distance between reads) !
 
 These metrics are computed using Picard:
-TODO -> TIME 2 minutes
+
 \begin{lstlisting}
 # Get insert size
 for i in normal tumour
@@ -507,19 +586,20 @@ less -S alignment/normal/normal.sorted.dup.recal.metric.insertSize.tsv
 less -S alignment/tumour/tumour.sorted.dup.recal.metric.insertSize.tsv
 \end{lstlisting}
 
-There is something interesting going on with our library ERR.
-
-**Can you tell what it is?** [Solution](solutions/_insert1.md)
+\begin{question}
+How do the two libraries compares? 
+\end{question}
+\begin{answer}
+The tumour sample has a larger median insert size than the normal sample (405 vs329) 
+\end{answer}
 
 \subsection{Step 3: BAM QC: Alignment metrics}
 It tells you if your sample and you reference fit together
-## Alignment metrics
+
 For the alignment metrics, samtools flagstat is very fast but with bwa-mem since some reads get broken into pieces, the numbers are a bit confusing. 
 
 We prefer the Picard way of computing metrics:
-TODO -> TIME 
 \begin{lstlisting}
-# Get alignment metrics
 for i in normal tumour
 do
   java -Xmx2G -jar ${PICARD_PATH}/CollectAlignmentSummaryMetrics.jar \
@@ -539,7 +619,17 @@ less -S alignment/tumour/tumour.sorted.dup.recal.metric.alignment.tsv
 
 \end{lstlisting}
 
-**Do you think the sample and the reference genome fit together ?** [Solution](solutions/_alnMetrics1.md)
+\begin{question}
+Do you think the sample and the reference genome fit together ?
+\end{question}
+\begin{answer}
+Yes, 99\% of the reads have been aligned \\
+Usually, we consider:  \\
+   - A good alignment if > 85\% \\
+   - Reference assembly issues if [60-85]\% \\
+   - Probably a mismatch between sample and ref if < 60 \%
+\end{answer}
+
 
 
 
@@ -551,26 +641,22 @@ less -S alignment/tumour/tumour.sorted.dup.recal.metric.alignment.tsv
 
 \section{Variant Calling}
 
-# Variant calling
-
-![SNV call summary workflow](img/snv_call.png)
-
 Most of SNV caller use either a Baysian, a threshold or a t-test approach to do the calling
 
- Here we will try 3 variant callers.
-- Varscan 2
-- MuTecT
+ Here we will try 3 variant callers.\\
+- Varscan 2 \\
+- MuTecT \\
 - Strelka
 
-Other candidates
-- Virmid
+Other candidates \\
+- Virmid \\
 - Somatic sniper
 
 many, MANY others can be found here:
-https://www.biostars.org/p/19104/
+\url{https://www.biostars.org/p/19104/}
 
 
-In our case, let's start with:
+In our case, let's create a new work directory to start with (from base directory):
 
 \begin{lstlisting}
 mkdir variant_calling
@@ -581,7 +667,7 @@ mkdir variant_calling
 VarScan calls somatic variants (SNPs and indels) using a heuristic method and a statistical test based on the number of aligned reads supporting each allele.
 
 
-Varscan somatic caller expects both a normal and a tumour file in SAMtools pileup format. from sequence alignments in binary alignment/map (BAM) format. To build a pileup file, you will need:
+Varscan somatic caller expects both a normal and a tumour file in SAMtools pileup format from sequence alignments in binary alignment/map (BAM) format. To build a pileup file, you will need:
 
 - A SAM/BAM file ("myData.bam") that has been sorted using the sort command of SAMtools.
 - The reference sequence ("reference.fasta") to which reads were aligned, in FASTA format.
@@ -589,7 +675,6 @@ Varscan somatic caller expects both a normal and a tumour file in SAMtools pileu
 
 
 \begin{lstlisting}
-# SAMTools mpileup
 for i in normal tumour
 do
 samtools mpileup -L 1000 -B -q 1 \
@@ -599,20 +684,36 @@ samtools mpileup -L 1000 -B -q 1 \
   > variant_calling/${i}.mpileup
 done
 
-TODO: TIME -> 5 minutes
-# varscan
-java -Xmx2G -jar ${VARSCAN_JAR} somatic variant_calling/normal.mpileup variant_calling/tumour.mpileup variant_calling/varscan --output-vcf 1 --strand-filter 1 --somatic-p-value 0.001 
+java -Xmx2G -jar ${VARSCAN_JAR} \
+somatic variant_calling/normal.mpileup \
+variant_calling/tumour.mpileup \
+variant_calling/varscan \
+--output-vcf 1 \
+--strand-filter 1 \
+--somatic-p-value 0.001 
 \end{lstlisting}
 
-[note on samtools mpileup and bcftools command](notes/_mpileup.md)
+Notes on samtools/bcftools arugments
+\begin{verbatim}
+Samtools:
+	-L 1000 : max per-sample depth for INDEL calling [1000] ; 
+	-B : disable BAQ (per-Base Alignment Quality) ; 
+	-q 1 : skip alignments with mapQ smaller than 1 ; 
+	-g generate genotype likelihoods in BCF format
 
-## Broad MuTecT
-TODO: TIME -> 5 minutes
-\begin{lstlisting}
-# Variants MuTecT
-# Note MuTecT only works with Java 6, 7 will give you an error
-# if you get "Comparison method violates its general contract!
+Bcftools :
+	-v output potential variant sites only
+	-c SNP calling (force –e : likelihood based analyses)
+	-g call genotypes at variant sites
+\end{verbatim}
+
+Now let's try a different variant caller, MuTect\\
+
+# Note MuTecT only works with Java 6, 7 will give you an error \\
+# if you get "Comparison method violates its general contract! \\
 # you used java 7"
+
+\begin{lstlisting}
 java -Xmx2G -jar ${MUTECT_JAR} \
   -T MuTect \
   -R ${REF}/human_g1k_v37.fasta \
@@ -627,10 +728,9 @@ java -Xmx2G -jar ${MUTECT_JAR} \
   -L 4:1-10000000
 \end{lstlisting}
 
-## Illumina Strelka
+And finally let's try Illumina's Strelka
 
 \begin{lstlisting}
-# Variants Strelka
 cp ${STRELKA_HOME}/etc/strelka_config_bwa_default.ini ./
 # Fix ini since we subsampled
 sed 's/isSkipDepthFilters =.*/isSkipDepthFilters = 1/g' -i strelka_config_bwa_default.ini
@@ -660,18 +760,50 @@ Let's look at a compressed vcf.
 \begin{lstlisting}
 zless -S variant_calling/varscan.snp.vcf.gz
 \end{lstlisting}
+
 Details on the spec can be found here:
-http://vcftools.sourceforge.net/specs.html
+\url{http://vcftools.sourceforge.net/specs.html}
 
 Fields vary from caller to caller.
  
-Some values are are almost always there: 
- 
-   - The ref vs alt alleles, 
-   - variant quality (QUAL column)
+Some values are are almost always there: \\
+   - The ref vs alt alleles, \\
+   - variant quality (QUAL column) \\
    - The per-sample genotype (GT) values.
 
-[note on the vcf format fields](notes/_vcf1.md)
+Note on vcf fields
+\begin{verbatim}
+INFO: 
+	DP = "Raw read depth"
+FORMAT:
+	GT = "Genotype”; 
+	PL = "List of Phred-scaled genotype likelihoods“ (min is better) ; 
+	DP = "# high-quality bases“ ; 
+	SP = "Phred-scaled strand bias P-value“ ; 
+	GQ = "Genotype Quality“
+\end{verbatim}
+
+\begin{question}
+Looking at the three vcf files, how can we detect only somatic variants?
+\end{question}
+\begin{answer}
+some commands to find somatic variant in the vcf file
+
+## varscan
+\begin{lstlisting}
+grep SOMATIC variant_calling/varscan.snp.vcf 
+\end{lstlisting}
+
+## MuTecT
+\begin{lstlisting}
+grep -v REJECT variant_calling/mutect.vcf | grep -v "^#"
+\end{lstlisting}
+
+## Strelka
+\begin{lstlisting}
+grep -v "^#" variant_calling/strelka.vcf
+\end{lstlisting}
+\end{answer}
 
 
 \newpage
@@ -679,8 +811,6 @@ Some values are are almost always there:
 \section{Variant Visualisation}
 
 The Integrative Genomics Viewer (IGV) is an efficient visualization tool for interactive exploration of large genome datasets. 
-
-![IGV browser presentation](img/igv.png)
 
 Before jumping into IGV, we'll generate a track IGV can use to plot coverage:
 TODO: Check igvtools works on command line
@@ -700,22 +830,17 @@ done
 
 Then:
  
-   1. Open IGV
-   2. Chose the reference genome corresponding to those use for alignment (b37)
-   3. Load bam file
+   1. Open IGV \\
+   2. Chose the reference genome corresponding to those use for alignment (b37) \\
+   3. Load bam file \\
    4. Load vcf files
 
-Explore/play with the data: 
- 
-   - find somatic variants
-    - Look around...
-
-[solution](solutions/_igv1.md)
+Explore/play with the data: \\ 
+   -find germline variants \\
+   -find somatic variants \\
+   -Look around...
 
 \newpage
-
-
-
 
 
 %----------------------------------------------------------------------------------------
