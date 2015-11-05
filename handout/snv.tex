@@ -915,7 +915,58 @@ The first of these is saying that this variant is a missense variant in the gene
 
 \section{Variant Filtration}
 
-We now have a VCF file where each variant has been annotated with its impact(s) on one or more genes. 
+We now have a VCF file where each variant has been annotated with one or more impacts on one or more genes. In a typical cancer genome, this means you will have about 4-5 million variants, and therefore rows, in a VCF file which takes up gigabytes of space. In our small example, we have just 100,000 variants which is already too large to make any kind of meaningful sense out of by just opening up the VCF file in a text editor. We need a solution that allows us to perform intelligent queries on our variants to search this mass of noise for the signal we are interested in.
+
+Luckily, such a free tool exists and is called GEMINI. GEMINI takes as an input your annotated VCF file and creates a database file which it can then query using Structured Query Language (SQL) commands. Not only does GEMINI make your variants easily searchable, it also brings in many external annotations to add more information about your variants (such as their frequencies in international databases).
+
+\begin{steps}
+To get started with GEMINI, lets make a database out of our annotated VCF file.
+\begin{lstlisting}
+gemini load -v [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.vcf --cores 4 --skip-gerp-bp --skip-cadd -t VEP [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.vcf.db
+\end{lstlisting}
+\end{steps}
+
+This will take approximately [TODO 30 minutes].
+
+Once the database has been created lets run a basic query to see what kind of information we get out of GEMINI.
+
+\begin{steps}
+\begin{lstlisting}
+gemini query -q "SELECT *, (gts).(*), (gt_types).(*), (gt_depths).(*), (gt_ref_depths).(*), (gt_alt_depths).(*), (gt_quals).(*) FROM variants LIMIT 10;" --header [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.vcf.db > [TODO]/gemini-result.tsv
+\end{lstlisting}
+\end{steps}
+
+Before we look at the results, lets dissect this query to understand the syntax we need to use to filter our variants. First, we have a SELECT statement which simply specifies that we want to select data from the database. The following comma-separated values are the columns that we want to output from the database, in this case we are selecting all columns with the star character and then all sub-columns for each sample with the other values. Then, we have a "FROM variants" statement which is specifying the table within the database that we want to fetch information from. Finally, the "LIMIT 10" statement specifies that no more than 10 rows should be returned. In summary then, we are asking for all columns for 10 rows from the table variants.
+
+\begin{steps}
+Now lets open the result in a spreadsheet to look at the annotations:
+\begin{lstlisting}
+run [TODO]/gemini-result.tsv
+\end{lstlisting}
+\end{steps}
+
+[TODO description]
+
+Lets now perform a more interesting query to find variants that have a medium or high impact on a gene and are rare or not present in existing international allele frequency databases.
+
+\begin{steps}
+\begin{lstlisting}
+gemini query -q "SELECT *, (gts).(*), (gt_types).(*), (gt_depths).(*), (gt_ref_depths).(*), (gt_alt_depths).(*), (gt_quals).(*) FROM variants WHERE (impact_severity = 'HIGH' OR impact_severity = 'MED') AND (aaf_1kg_all < 0.01 OR aaf_1kg_all is null) AND (aaf_esp_all < 0.01 OR aaf_esp_all is null) AND (aaf_exac_all < 0.01 OR aaf_exac_all is null);" --header [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.vcf.db > [TODO]/gemini-result-highmedimpact-rare.tsv
+\end{lstlisting}
+\end{steps}
+
+Notice that we have added a WHERE statement which restricts the rows that are returned based on values that we specify for specific columns. Here, we are asking to return variants where their impact on the gene (impact_severity column) is medium or high and the allele frequency in 1000Genomes, ESP and EXaC is less than 1\% or the variant is not present in any of these databases.
+
+\begin{steps}
+Let's now look at the variants returned for this query:
+\begin{lstlisting}
+run [TODO]/gemini-result-highmedimpact-rare.tsv
+\end{lstlisting}
+\end{steps}
+
+[TODO description]
+
+GEMINI allows you to filter your variants based on any column that you see in the results files. For example, you may want all variants in a specific gene, in which case you would simply add "WHERE gene = 'BRCA1'" to your query. For complete documentation with many examples of queries, see the GEMINI documentation here: \url{http://gemini.readthedocs.org}{http://gemini.readthedocs.org}.
 
 %----------------------------------------------------------------------------------------
 
