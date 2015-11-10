@@ -846,7 +846,7 @@ For this section, we will use \textbf{all} variants from the first 60Mb of chrom
 \begin{steps}
 Our pre-generated VCF file is located in the [TODO] folder. Lets have a quick look at the variants:
 \begin{lstlisting}
-less /[TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vcf.gz
+zless /variants/SM.merged.mrkdup.realn.chr5.60Mb.vcf.gz
 \end{lstlisting}
 \end{steps}
 
@@ -856,7 +856,7 @@ Let's now run VEP on this VCF file to annotate each variant with its impact(s) o
 
 \begin{steps}
 \begin{lstlisting}
-/vep/variant_effect_predictor.pl -i [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vcf.gz --vcf -o [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.vcf --stats_file [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.html --offline --fork 4 --no_progress --canonical --sift b --polyphen b --symbol --numbers --terms so --biotype --total_length --plugin LoF,human_ancestor_fa:false --fields Consequence,Codons,Amino_acids,Gene,SYMBOL,Feature,EXON,PolyPhen,SIFT,Protein_position,BIOTYPE,CANONICAL,Feature_type,cDNA_position,CDS_position,Existing_variation,DISTANCE,STRAND,CLIN_SIG,LoF_flags,LoF_filter,LoF,RadialSVM_score,RadialSVM_pred,LR_score,LR_pred,CADD_raw,CADD_phred,Reliability_index,HGVSc,HGVSp --fasta [TODO]/human_g1k_v37.fasta
+perl Applications/ensembl-tools/scripts/variant_effect_predictor/variant_effect_predictor.pl -i variants/SM.merged.mrkdup.realn.chr5.60Mb.vcf.gz --vcf -o variants/SM.merged.mrkdup.realn.chr5.60Mb.vep.vcf --stats_file variants/SM.merged.mrkdup.realn.chr5.60Mb.vep.html --format vcf --offline -fork 4 --fasta ref/human_g1k_v37.fasta --fields Consequence,Codons,Amino_acids,Gene,SYMBOL,Feature,EXON,PolyPhen,SIFT,Protein_position,BIOTYPE
 \end{lstlisting}
 \end{steps}
 
@@ -865,35 +865,36 @@ VEP will take approximately 10 minutes to run and once it is finished you will h
 \begin{steps}
 Once VEP is done running, lets first look at the HTML report it produced with the following command:
 \begin{lstlisting}
-run [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.html
+firefox variants/SM.merged.mrkdup.realn.chr5.60Mb.vep.html
 \end{lstlisting}
 \end{steps}
+
 
 [TODO description of HTML]
 
 \begin{steps}
 Now lets look at the variant annotations that VEP has added to the VCF file by focussing on a single variant. Lets fetch one variant from the original VCF file and the annotated VCF file.
 \begin{lstlisting}
-zcat [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vcf.gz | grep '^5\textbackslash t174106\textbackslash t'
-grep '^5\textbackslash t174106\textbackslash t' [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.vcf
+zcat variants/SM.merged.mrkdup.realn.chr5.60Mb.vcf.gz | grep '5\textbackslash s174106\textbackslash s'
+grep '5\textbackslash s174106\textbackslash s' variants/SM.merged.mrkdup.realn.chr5.60Mb.vep.vcf
 \end{lstlisting}
 \end{steps}
 
 These commands give us the original variant:
-5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ\_MEAN=127.00;GQ\_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
+5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ_MEAN=127.00;GQ_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
 
 and the same variant annotated is:
-5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ\_MEAN=127.00;GQ\_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446;CSQ=missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|benign(0.033)|deleterious(0.04)|1076/1271|protein\_coding|YES|Transcript|3277/11513|3227/3816|||1||||||||||||ENST00000283426.6:c.3227G>A|ENSP00000283426.6:p.Arg1076Gln,non\_coding\_transcript\_exon\_variant\&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron||Transcript|1106/2165||||1||||||||||||ENST00000504041.1:n.1106G>A|	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
+5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ\_MEAN=127.00;GQ\_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446;CSQ=missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding,non\_coding\_transcript\_exon\_variant&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
 
-You can see that all VEP has added is:
-CSQ=missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|benign(0.033)|deleterious(0.04)|1076/1271|protein\_coding|YES|Transcript|3277/11513|3227/3816|||1||||||||||||ENST00000283426.6:c.3227G>A|ENSP00000283426.6:p.Arg1076Gln,non\_coding\_transcript\_exon\_variant\&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron||Transcript|1106/2165||||1||||||||||||ENST00000504041.1:n.1106G>A|
+You can see that VEP has added:
+CSQ=missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding,non\_coding\_transcript\_exon\_variant&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron
 
 This is further composed of two annotations for this variant:
-missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|benign(0.033)|deleterious(0.04)|1076/1271|protein\_coding|YES|Transcript|3277/11513|3227/3816|||1||||||||||||ENST00000283426.6:c.3227G>A|ENSP00000283426.6:p.Arg1076Gln
+missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding
 
 and
 
-non\_coding\_transcript\_exon\_variant\&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron||Transcript|1106/2165||||1||||||||||||ENST00000504041.1:n.1106G>A|
+non\_coding\_transcript\_exon\_variant&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron
 
 The first of these is saying that this variant is a missense variant in the gene PLEKHG4B for the transcript ENST00000283426 and the second that it is also a non\_coding\_transcript\_exon\_variant in the transcript ENST00000504041.
 
@@ -910,17 +911,17 @@ Luckily, such a free tool exists and is called GEMINI. GEMINI takes as an input 
 \begin{steps}
 To get started with GEMINI, lets make a database out of our annotated VCF file.
 \begin{lstlisting}
-gemini load -v [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.vcf --cores 4 --skip-gerp-bp --skip-cadd -t VEP [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.vcf.db
+gemini load -v variants/SM.merged.mrkdup.realn.chr5.60Mb.vep.vcf --cores 4 --skip-gerp-bp --skip-cadd -t VEP variants/SM.livermets.vep.db
 \end{lstlisting}
 \end{steps}
 
-This will take approximately [TODO 30 minutes].
+This will take approximately 10 minutes.
 
 Once the database has been created lets run a basic query to see what kind of information we get out of GEMINI.
 
 \begin{steps}
 \begin{lstlisting}
-gemini query -q "SELECT *, (gts).(*), (gt_types).(*), (gt_depths).(*), (gt_ref_depths).(*), (gt_alt_depths).(*), (gt_quals).(*) FROM variants LIMIT 10;" --header [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.vcf.db > [TODO]/gemini-result.tsv
+gemini query -q "SELECT *, (gts).(*), (gt_types).(*), (gt_depths).(*), (gt_ref_depths).(*), (gt_alt_depths).(*), (gt_quals).(*) FROM variants LIMIT 10;" --header variants/SM.livermets.vep.db > variants/gemini-output.tsv
 \end{lstlisting}
 \end{steps}
 
@@ -929,7 +930,8 @@ Before we look at the results, lets dissect this query to understand the syntax 
 \begin{steps}
 Now lets open the result in a spreadsheet to look at the annotations:
 \begin{lstlisting}
-run [TODO]/gemini-result.tsv
+libreoffice --calc variants/gemini-result.tsv
+Tick the "Tab" under "Separated by" on the dialog window that comes up.
 \end{lstlisting}
 \end{steps}
 
@@ -939,7 +941,7 @@ Lets now perform a more interesting query to find variants that have a medium or
 
 \begin{steps}
 \begin{lstlisting}
-gemini query -q "SELECT *, (gts).(*), (gt_types).(*), (gt_depths).(*), (gt_ref_depths).(*), (gt_alt_depths).(*), (gt_quals).(*) FROM variants WHERE (impact_severity = 'HIGH' OR impact_severity = 'MED') AND (aaf_1kg_all < 0.01 OR aaf_1kg_all is null) AND (aaf_esp_all < 0.01 OR aaf_esp_all is null) AND (aaf_exac_all < 0.01 OR aaf_exac_all is null);" --header [TODO]/SM_liverMets.merged.mrkdup.realn.chr5.60Mb.vep.vcf.db > [TODO]/gemini-result-highmedimpact-rare.tsv
+gemini query -q "SELECT *, (gts).(*), (gt_types).(*), (gt_depths).(*), (gt_ref_depths).(*), (gt_alt_depths).(*), (gt_quals).(*) FROM variants WHERE (impact_severity = 'HIGH' OR impact_severity = 'MED') AND (aaf_1kg_all < 0.01 OR aaf_1kg_all is null) AND (aaf_esp_all < 0.01 OR aaf_esp_all is null) AND (aaf_exac_all < 0.01 OR aaf_exac_all is null);" --header variants/SM.livermets.vep.db > variants/gemini-output.tsv
 \end{lstlisting}
 \end{steps}
 
