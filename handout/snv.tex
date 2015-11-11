@@ -882,20 +882,20 @@ grep '5\textbackslash s174106\textbackslash s' variants/SM.merged.mrkdup.realn.c
 \end{steps}
 
 These commands give us the original variant:
-5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ_MEAN=127.00;GQ_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
+5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ\_MEAN=127.00;GQ\_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
 
 and the same variant annotated is:
-5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ\_MEAN=127.00;GQ\_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446;CSQ=missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding,non\_coding\_transcript\_exon\_variant&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
+5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ\_MEAN=127.00;GQ\_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446;CSQ=missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding,non\_coding\_transcript\_exon\_variant\&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
 
 You can see that VEP has added:
-CSQ=missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding,non\_coding\_transcript\_exon\_variant&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron
+CSQ=missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding,non\_coding\_transcript\_exon\_variant\&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron
 
 This is further composed of two annotations for this variant:
 missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding
 
 and
 
-non\_coding\_transcript\_exon\_variant&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron
+non\_coding\_transcript\_exon\_variant\&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron
 
 The first of these is saying that this variant is a missense variant in the gene PLEKHG4B for the transcript ENST00000283426 and the second that it is also a non\_coding\_transcript\_exon\_variant in the transcript ENST00000504041.
 
