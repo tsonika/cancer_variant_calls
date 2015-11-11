@@ -12,7 +12,8 @@
 
 \setModuleContributions{%
   Gayle Phillip \mailto{Sonika.Tyagi@agrf.org.au} \\
-  Sonika Tyagi \mailto{gkphilip@unimelb.edu.au}% 
+  Sonika Tyagi \mailto{gkphilip@unimelb.edu.au} \\
+  Velimir Gayevskiy, Garvan Institute \mailto{v.gayevskiy@garvan.org.au}
 }
 
 %----------------------------------------------------------------------------------------
@@ -844,7 +845,7 @@ The sections above have dealt with calling somatic variants from the first 10Mb 
 For this section, we will use \textbf{all} variants from the first 60Mb of chromosome 5 produced using the GATK HaplotypeCaller variant caller on both the normal and tumour genomes to produce GVCF files which are fed into GATK GenotypeGVCFs to produce a merged VCF file. We will be using a pre-generated VCF file as we are primarily interested in the annotation of these variants rather than their generation. The annotation method we will use is called \textbf{Variant Effect Predictor} or VEP for short and is available from Ensembl here: \url{http://ensembl.org/info/docs/tools/vep/index.html}{http://ensembl.org/info/docs/tools/vep/index.html}.
 
 \begin{steps}
-Our pre-generated VCF file is located in the [TODO] folder. Lets have a quick look at the variants:
+Our pre-generated VCF file is located in the \texttt{variants} folder. Lets have a quick look at the variants:
 \begin{lstlisting}
 zless /variants/SM.merged.mrkdup.realn.chr5.60Mb.vcf.gz
 \end{lstlisting}
@@ -950,7 +951,8 @@ Notice that we have added a WHERE statement which restricts the rows that are re
 \begin{steps}
 Let's now look at the variants returned for this query:
 \begin{lstlisting}
-run [TODO]/gemini-result-highmedimpact-rare.tsv
+libreoffice --calc variants/gemini-result.tsv
+Tick the "Tab" under "Separated by" on the dialog window that comes up.
 \end{lstlisting}
 \end{steps}
 
@@ -970,7 +972,7 @@ GEMINI allows you to filter your variants based on any column that you see in th
 
 %TODO Change to using BiBTeX
 \begin{enumerate}
-  \item Ju YS1, Lee WC, Shin JY, Lee S, Bleazard T, Won JK, Kim YT, Kim JI, Kang JH, Seo JS. A transforming KIF5B and RET gene fusion in lung adenocarcinoma revealed from whole-genome and transcriptome sequencing. Genome Res. 2012 Mar;22(3):436-45. 
+  \item Paila U, Chapman BA, Kirchner R and Quinlan AR. "GEMINI: Integrative Exploration of Genetic Variation and Genome Annotations". PLoS Comput Biol, 2013, 9(7): e1003153. doi:10.1371/journal.pcbi.1003153
 \end{enumerate}
 
 \section{Acknowledgements}
