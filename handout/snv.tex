@@ -785,11 +785,11 @@ Some values are are almost always there: \\
 Note on vcf fields
 \begin{description}[style=multiline,labelindent=0cm,align=right,leftmargin=\descriptionlabelspace,rightmargin=1.5cm,font=\ttfamily]
 	\item[DP] = "Raw read depth"
-	\item[GT] = "Genotype” 
-	\item[PL] = "List of Phred-scaled genotype likelihoods“ (min is better) 
-	\item[DP] = "# high-quality bases“ 
-	\item[SP] = "Phred-scaled strand bias P-value“  
-	\item[GQ] = "Genotype Quality“
+	\item[GT] = "Genotype" 
+	\item[PL] = "List of Phred-scaled genotype likelihoods" (min is better) 
+	\item[DP] = "\# high-quality bases" 
+	\item[SP] = "Phred-scaled strand bias P-value"  
+	\item[GQ] = "Genotype Quality"
 \end{description}
 
 \begin{questions}
@@ -843,7 +843,7 @@ $IGV
 Then:
    1. Chose the reference genome corresponding to those use for alignment (b37) \\
    2. Load bam files (tumour.sorted.dup.recal.bam and normal.sorted.dup.recal.bam) \\
-   3. Load vcf files (from variant_Calling directory)
+   3. Load vcf files (from variant\_Calling directory)
 
 Explore/play with the data: \\ 
    -find germline variants \\
