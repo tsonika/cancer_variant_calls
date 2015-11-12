@@ -8,6 +8,7 @@
   Matt Field \mailto{matt.field@anu.edu.au}\\
   Dan Andrews \mailto{dan.andrews@anu.edu.au}\\
   Velimir Gayevskiy \mailto{v.gayevskiy@garvan.org.au} \\
+  Mathieu Bourgney \mailto{mathieu.bourgey@mcgill.ca}% 
 }
 
 \setModuleContributions{%
@@ -109,14 +110,11 @@ The BAM alignment files are contained in the subdirectory called \texttt{alignme
   \item[\texttt{tumor/tumor.sorted.bam} and \texttt{tumor/tumor.sorted.bam.bai}] \hfill\\ 
 \end{description}
 
-These files are based on subsetting the whole genomes derived from blood and liver metastases to the first 50Mb of chromosome 4 (with only the first 10Mb of chr4 utilised for particularly computationally intensive steps such as variant calling!). This will allow our analyses to run in a sufficient time during the workshop, but it's worth being aware that these are just 1.25\% of the genome which highlights the length of time and resourced required to perform cancer genomics on full genomes!
+These files are based on subsetting the whole genomes derived from blood and liver metastases to the first 10Mb of chromosome 4. This will allow our analyses to run in a sufficient time during the workshop, but it's worth being aware that this is less < 0.5\% of the genome which highlights the length of time and resourced required to perform cancer genomics on full genomes!
 
 The initial structure of your folders should look like this:
 
 \begin{verbatim}
--- raw_reads/            # fastqs from the center (down sampled)
-  -- normal/              # The blood sample directory containing fastq's 
-  -- tumor/               # The tumour sample directory containing fastq's
 -- alignment/	          # bam files 
   -- normal/              # The blood sample directory containing bam files 
   -- tumour/               # The tumour sample directory containing bam files \\
@@ -124,33 +122,16 @@ The initial structure of your folders should look like this:
 -- commands.sh            # cheat sheet 
 \end{verbatim}
 
-\begin{steps}
-Open the Terminal and go to the base \texttt{workshopCanberra} working directory:
-\begin{lstlisting}
-cd ~/workshopCanberra
-\end{lstlisting}
-\end{steps}
 
-\begin{warning}
-  All commands entered into the terminal for this tutorial should be from within the
-  \textbf{\texttt{workshopCanberra}} directory.
-\end{warning}
-
-\begin{steps}
-Check that the \texttt{alignment} directory contains the above-mentioned files by typing:
-\begin{lstlisting}
-ls alignment
-\end{lstlisting}
-\end{steps}
 
 \begin{steps}
 Now we need to set some environment variables to save typing lengthy file paths over and over. Copy and paste the following commands into your terminal.
 \begin{lstlisting}
 export APP_ROOT=/home/trainee/snv/Applications
 
-export PATH=$PATH:$APP_ROOT/igvtools
+export IGVTOOLS_PATH=$PATH:$APP_ROOT/igvtools/
 
-export PICARD_PATH=$APP_ROOT/picard/
+export PICARD_JAR=$APP_ROOT/picard/picard.jar
 
 export SNPEFF_HOME=$APP_ROOT/snpeff/
 
@@ -160,13 +141,38 @@ export BVATOOLS_JAR=$APP_ROOT/bvatools/bvatools-1.6-full.jar
 
 export TRIMMOMATIC_JAR=$APP_ROOT/trimmomatic/trimmomatic-0.33.jar
 
-export STRELKA_HOME=$APP_ROOT/trimmomatic/
+export STRELKA_HOME=$APP_ROOT/strelka/
 
 export MUTECT_JAR=$APP_ROOT/mutect/muTect-1.1.4.jar
 
 export VARSCAN_JAR=$APP_ROOT/varscan/VarScan.v2.4.1.jar 
 
 export REF=/home/trainee/snv/ref
+
+export SNV_BASE=/home/trainee/snv
+
+export JAVA7=/usr/lib/jvm/java-7-openjdk-amd64/jre/bin/java
+
+export IGV=$APP_ROOT/igv/igv.sh
+\end{lstlisting}
+\end{steps}
+
+\begin{steps}
+Open the Terminal and go to the base \texttt/home/trainee/snv working directory:
+\begin{lstlisting}
+cd $SNV_BASE
+\end{lstlisting}
+\end{steps}
+
+\begin{warning}
+  All commands entered into the terminal for this tutorial should be from within the
+  \textbf{\texttt/home/trainee/snv} directory.
+\end{warning}
+
+\begin{steps}
+Check that the \texttt{alignment} directory contains the above-mentioned files by typing:
+\begin{lstlisting}
+ls alignment
 \end{lstlisting}
 \end{steps}
 
@@ -240,6 +246,7 @@ samtools view alignment/normal/normal.sorted.bam | head -n100
 \begin{questions} 
 Let's take the last one, which looks properly paired and find it's mate pair. \\
 HINT: Instead of using 'head' what unix command could we pipe the output to?
+HINT2: Once we've found both reads to stop the command running we type CTRL-C
 \end{questions}
 \begin{answer}
 \begin{lstlisting}
@@ -286,15 +293,15 @@ It basically runs in 2 steps: \\
    2. Realign them \\
 
 \begin{lstlisting}
-java -Xmx2G  -jar ${GATK_JAR} \
+$JAVA7 -Xmx2G  -jar ${GATK_JAR} \
   -T RealignerTargetCreator \
   -R ${REF}/human_g1k_v37.fasta \
   -o alignment/normal/realign.intervals \
   -I alignment/normal/normal.sorted.bam \
-  -I alignment/tumuor/tumour.sorted.bam \
+  -I alignment/tumour/tumour.sorted.bam \
   -L ${REF}/human_g1k_v37.intervals
 
-java -Xmx2G -jar ${GATK_JAR} \
+$JAVA7 -Xmx2G -jar ${GATK_JAR} \
   -T IndelRealigner \
   -R ${REF}/human_g1k_v37.fasta \
   -targetIntervals alignment/normal/realign.intervals \
@@ -318,8 +325,6 @@ Explanation of parameters
  \item[-L] Genomic intervals to operate on
 \end{description}
 \end{note}
-
-This will take approximately NN minutes to run... \\
 
 \begin{questions} 
 Why did we use both normal and tumor together?
@@ -372,15 +377,22 @@ Some read entries don't have their mate information written properly. \\
 We use Picard to do this: 
 
 \begin{lstlisting}
-java -Xmx2G -jar ${PICARD_PATH}/FixMateInformation.jar \
-  VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
+$JAVA7 -Xmx2G -jar ${PICARD_JAR} FixMateInformation \
+  VALIDATION_STRINGENCY=SILENT \
+  CREATE_INDEX=true \
+  SORT_ORDER=coordinate \
+  MAX_RECORDS_IN_RAM=500000 \
   INPUT=alignment/normal/normal.sorted.realigned.bam \
   OUTPUT=alignment/normal/normal.matefixed.bam
 
-java -Xmx2G -jar ${PICARD_PATH}/FixMateInformation.jar \
-  VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=500000 \
+$JAVA7 -Xmx2G -jar ${PICARD_JAR} FixMateInformation \
+  VALIDATION_STRINGENCY=SILENT \
+  CREATE_INDEX=true \
+  SORT_ORDER=coordinate \
+  MAX_RECORDS_IN_RAM=500000 \
   INPUT=alignment/tumour/tumour.sorted.realigned.bam \
   OUTPUT=alignment/tumour/tumour.matefixed.bam
+
 \end{lstlisting}
 
 \subsection{Step 4: Pre-processing: Mark Duplicates}
@@ -416,14 +428,20 @@ Brute force, compare all the sequences.
 
 Here we will use picards approach:
 \begin{lstlisting}
-java -Xmx2G -jar ${PICARD_PATH}/MarkDuplicates.jar \
-  REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
+$JAVA7 -Xmx2G -jar ${PICARD_JAR} MarkDuplicates \
+  REMOVE_DUPLICATES=false \
+  CREATE_MD5_FILE=true \
+  VALIDATION_STRINGENCY=SILENT \
+  CREATE_INDEX=true \
   INPUT=alignment/normal/normal.matefixed.bam \
   OUTPUT=alignment/normal/normal.sorted.dup.bam \
   METRICS_FILE=alignment/normal/normal.sorted.dup.metrics
 
-java -Xmx2G -jar ${PICARD_PATH}/MarkDuplicates.jar \
-  REMOVE_DUPLICATES=false CREATE_MD5_FILE=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true \
+$JAVA7 -Xmx2G -jar ${PICARD_JAR} MarkDuplicates \
+  REMOVE_DUPLICATES=false \
+  CREATE_MD5_FILE=true \
+  VALIDATION_STRINGENCY=SILENT \
+  CREATE_INDEX=true \
   INPUT=alignment/tumour/tumour.matefixed.bam \
   OUTPUT=alignment/tumour/tumour.sorted.dup.bam \
   METRICS_FILE=alignment/tumour/tumour.sorted.dup.metrics
@@ -440,7 +458,7 @@ less alignment/normal/normal.sorted.dup.metrics
 What percent of reads are duplicates?
 \end{questions}
 \begin{answer}
-0.46\%
+0.046996\%
 \end{answer}
 
 \begin{questions} 
@@ -476,7 +494,7 @@ GATK BaseRecalibrator:
 \begin{lstlisting}
 for i in normal tumour
 do
-  java -Xmx2G -jar ${GATK_JAR} \
+  $JAVA7 -Xmx2G -jar ${GATK_JAR} \
     -T BaseRecalibrator \
     -nct 2 \
     -R ${REF}/human_g1k_v37.fasta \
@@ -485,7 +503,7 @@ do
     -o alignment/${i}/${i}.sorted.dup.recalibration_report.grp \
     -I alignment/${i}/${i}.sorted.dup.bam
 
-    java -Xmx2G -jar ${GATK_JAR} \
+    $JAVA7 -Xmx2G -jar ${GATK_JAR} \
       -T PrintReads \
       -nct 2 \
       -R ${REF}/human_g1k_v37.fasta \
@@ -506,7 +524,7 @@ Here we'll use the GATK one
 \# Get Depth
 for i in normal tumour
 do
-  java  -Xmx2G -jar ${GATK_JAR} \
+  $JAVA7  -Xmx2G -jar ${GATK_JAR} \
     -T DepthOfCoverage \
     --omitDepthOutputAtEachBase \
     --summaryCoverageThreshold 10 \
@@ -561,7 +579,7 @@ These metrics are computed using Picard:
 \# Get insert size
 for i in normal tumour
 do
-  java -Xmx2G -jar ${PICARD_PATH}/CollectInsertSizeMetrics.jar \
+  $JAVA7 -Xmx2G -jar ${PICARD_JAR} CollectInsertSizeMetrics \
     VALIDATION_STRINGENCY=SILENT \
     REFERENCE_SEQUENCE=${REF}/human_g1k_v37.fasta \
     INPUT=alignment/${i}/${i}.sorted.dup.recal.bam \
@@ -582,7 +600,7 @@ less -S alignment/tumour/tumour.sorted.dup.recal.metric.insertSize.tsv
 How do the two libraries compares? 
 \end{questions}
 \begin{answer}
-The tumour sample has a larger median insert size than the normal sample (405 vs329) 
+The tumour sample has a larger median insert size than the normal sample (405 vs 329) 
 \end{answer}
 
 \subsection{Step 3: BAM QC: Alignment metrics}
@@ -594,7 +612,7 @@ We prefer the Picard way of computing metrics:
 \begin{lstlisting}
 for i in normal tumour
 do
-  java -Xmx2G -jar ${PICARD_PATH}/CollectAlignmentSummaryMetrics.jar \
+  $JAVA7 -Xmx2G -jar ${PICARD_JAR} CollectAlignmentSummaryMetrics \
     VALIDATION_STRINGENCY=SILENT \
     REFERENCE_SEQUENCE=${REF}/human_g1k_v37.fasta \
     INPUT=alignment/${i}/${i}.sorted.dup.recal.bam \
@@ -608,7 +626,6 @@ explore the results
 \begin{lstlisting}
 less -S alignment/normal/normal.sorted.dup.recal.metric.alignment.tsv
 less -S alignment/tumour/tumour.sorted.dup.recal.metric.alignment.tsv
-
 \end{lstlisting}
 
 \begin{questions}
@@ -628,7 +645,7 @@ Usually, we consider:  \\
 \newpage
 
 %----------------------------------------------------------------------------------------
-%	VISUALISATION
+%	VARIANT CALLING
 %----------------------------------------------------------------------------------------
 
 \section{Variant Calling}
@@ -651,6 +668,7 @@ many, MANY others can be found here:
 In our case, let's create a new work directory to start with (from base directory):
 
 \begin{lstlisting}
+cd $SNV_BASE
 mkdir variant_calling
 \end{lstlisting}
 
@@ -674,7 +692,7 @@ samtools mpileup -L 1000 -B -q 1 \
   > variant_calling/${i}.mpileup
 done
 
-java -Xmx2G -jar ${VARSCAN_JAR} \
+$JAVA7 -Xmx2G -jar ${VARSCAN_JAR} \
 somatic variant_calling/normal.mpileup \
 variant_calling/tumour.mpileup \
 variant_calling/varscan \
@@ -721,15 +739,15 @@ java -Xmx2G -jar ${MUTECT_JAR} \
 And finally let's try Illumina's Strelka
 
 \begin{lstlisting}
-cp ${STRELKA_HOME}/etc/strelka_config_bwa_default.ini ./
-\# Fix ini since we subsampled
+cp ${STRELKA_HOME}/etc/strelka_config_bwa_default.ini .
+
 sed 's/isSkipDepthFilters =.*/isSkipDepthFilters = 1/g' -i strelka_config_bwa_default.ini
 
 ${STRELKA_HOME}/bin/configureStrelkaWorkflow.pl \
   --normal=alignment/normal/normal.sorted.dup.recal.bam \
   --tumor=alignment/tumour/tumour.sorted.dup.recal.bam \
   --ref=${REF}/human_g1k_v37.fasta \
-  --config=$(pwd)/strelka_config_bwa_default.ini \
+  --config=${SNV_BASE}/strelka_config_bwa_default.ini \
   --output-dir=variant_calling/strelka/
 
   cd variant_calling/strelka/
@@ -803,13 +821,12 @@ grep -v "^#" variant_calling/strelka.vcf
 The Integrative Genomics Viewer (IGV) is an efficient visualization tool for interactive exploration of large genome datasets. 
 
 Before jumping into IGV, we'll generate a track IGV can use to plot coverage:
-TODO: Check igvtools works on command line
 
 \# Coverage Track
 \begin{lstlisting}
 for i in normal tumour
 do
-  igvtools count \
+  $JAVA7 -jar ${IGVTOOLS_PATH}/igvtools.jar count \
     -f min,max,mean \
     alignment/${i}/${i}.sorted.dup.recal.bam \
     alignment/${i}/${i}.sorted.dup.recal.bam.tdf \
@@ -817,11 +834,15 @@ do
 done
 \end{lstlisting}
 
+\# Open IGV
+\begin{lstlisting}
+$IGV
+\end{lstlisting}
+
 Then:
-   1. Open IGV \\
-   2. Chose the reference genome corresponding to those use for alignment (b37) \\
-   3. Load bam file \\
-   4. Load vcf files
+   1. Chose the reference genome corresponding to those use for alignment (b37) \\
+   2. Load bam files (tumour.sorted.dup.recal.bam and normal.sorted.dup.recal.bam) \\
+   3. Load vcf files (from variant_Calling directory)
 
 Explore/play with the data: \\ 
    -find germline variants \\
