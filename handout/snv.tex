@@ -522,7 +522,7 @@ Once your whole bam is generated, it's always a good thing to check the data aga
 If you have data from a capture kit, you should see how well your targets worked. Both GATK and BVATools have depth of coverage tools. \\
 Here we'll use the GATK one
 \begin{lstlisting}
-\# Get Depth
+
 for i in normal tumour
 do
   $JAVA7  -Xmx2G -jar ${GATK_JAR} \
@@ -577,7 +577,6 @@ Different from the gap size (= distance between reads) !
 These metrics are computed using Picard:
 
 \begin{lstlisting}
-\# Get insert size
 for i in normal tumour
 do
   $JAVA7 -Xmx2G -jar ${PICARD_JAR} CollectInsertSizeMetrics \
@@ -673,7 +672,7 @@ cd $SNV_BASE
 mkdir variant_calling
 \end{lstlisting}
 
-\# varscan 2
+varscan 2
 VarScan calls somatic variants (SNPs and indels) using a heuristic method and a statistical test based on the number of aligned reads supporting each allele.
 
 Varscan somatic caller expects both a normal and a tumour file in SAMtools pileup format from sequence alignments in binary alignment/map (BAM) format. To build a pileup file, you will need:
@@ -702,25 +701,28 @@ variant_calling/varscan \
 --somatic-p-value 0.001 
 \end{lstlisting}
 
-Notes on samtools/bcftools arugments
-\begin{verbatim}
-Samtools:
-	-L 1000 : max per-sample depth for INDEL calling [1000] ; 
-	-B : disable BAQ (per-Base Alignment Quality) ; 
-	-q 1 : skip alignments with mapQ smaller than 1 ; 
-	-g generate genotype likelihoods in BCF format
+Notes on samtools arguments
+\begin{description}[style=multiline,labelindent=0cm,align=right,leftmargin=\descriptionlabelspace,rightmargin=1.5cm,font=\ttfamily]
+	\item[-L] = max per-sample depth for INDEL calling [1000] ; 
+	\item[-B] = disable BAQ (per-Base Alignment Quality) ; 
+	\item[-q] = skip alignments with mapQ smaller than 1 ; 
+	\item[-g] = generate genotype likelihoods in BCF format
+\end{description} 
 
-Bcftools :
-	-v output potential variant sites only
-	-c SNP calling (force –e : likelihood based analyses)
-	-g call genotypes at variant sites
-\end{verbatim}
+Notes on bcftools arguments
+\begin{description}[style=multiline,labelindent=0cm,align=right,leftmargin=\descriptionlabelspace,rightmargin=1.5cm,font=\ttfamily]
+	\item[-v] = output potential variant sites only
+	\item[-c] = SNP calling (force –e : likelihood based analyses)
+	\item[-g] = call genotypes at variant sites
+\end{description}
 
 Now let's try a different variant caller, MuTect \\
 
-\# Note MuTecT only works with Java 6, 7 will give you an error \\
-\# if you get "Comparison method violates its general contract! \\
-\# you used java 7"
+\begin{note} 
+Note MuTecT only works with Java 6, 7 will give you an error \\
+if you get "Comparison method violates its general contract! \\
+you used java 7"
+\end{note}
 
 \begin{lstlisting}
 java -Xmx2G -jar ${MUTECT_JAR} \
@@ -781,16 +783,14 @@ Some values are are almost always there: \\
    - The per-sample genotype (GT) values.
 
 Note on vcf fields
-\begin{verbatim}
-INFO: 
-	DP = "Raw read depth"
-FORMAT:
-	GT = "Genotype”; 
-	PL = "List of Phred-scaled genotype likelihoods“ (min is better) ; 
-	DP = "# high-quality bases“ ; 
-	SP = "Phred-scaled strand bias P-value“ ; 
-	GQ = "Genotype Quality“
-\end{verbatim}
+\begin{description}[style=multiline,labelindent=0cm,align=right,leftmargin=\descriptionlabelspace,rightmargin=1.5cm,font=\ttfamily]
+	\item[DP] = "Raw read depth"
+	\item[GT] = "Genotype” 
+	\item[PL] = "List of Phred-scaled genotype likelihoods“ (min is better) 
+	\item[DP] = "# high-quality bases“ 
+	\item[SP] = "Phred-scaled strand bias P-value“  
+	\item[GQ] = "Genotype Quality“
+\end{description}
 
 \begin{questions}
 Looking at the three vcf files, how can we detect only somatic variants?
@@ -798,17 +798,17 @@ Looking at the three vcf files, how can we detect only somatic variants?
 \begin{answer}
 some commands to find somatic variant in the vcf file
 
-\# varscan
+varscan
 \begin{lstlisting}
 grep SOMATIC variant_calling/varscan.snp.vcf 
 \end{lstlisting}
 
-\# MuTecT
+MuTecT
 \begin{lstlisting}
 grep -v REJECT variant_calling/mutect.vcf | grep -v "^#"
 \end{lstlisting}
 
-\# Strelka
+Strelka
 \begin{lstlisting}
 grep -v "^#" variant_calling/strelka.vcf
 \end{lstlisting}
@@ -823,7 +823,7 @@ The Integrative Genomics Viewer (IGV) is an efficient visualization tool for int
 
 Before jumping into IGV, we'll generate a track IGV can use to plot coverage:
 
-\# Coverage Track
+
 \begin{lstlisting}
 for i in normal tumour
 do
@@ -835,7 +835,7 @@ do
 done
 \end{lstlisting}
 
-\# Open IGV
+Open IGV
 \begin{lstlisting}
 $IGV
 \end{lstlisting}
