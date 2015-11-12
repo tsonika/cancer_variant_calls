@@ -13,7 +13,8 @@
 
 \setModuleContributions{%
   Gayle Phillip \mailto{Sonika.Tyagi@agrf.org.au} \\
-  Sonika Tyagi \mailto{gkphilip@unimelb.edu.au}% 
+  Sonika Tyagi \mailto{gkphilip@unimelb.edu.au} \\
+  Velimir Gayevskiy, Garvan Institute \mailto{v.gayevskiy@garvan.org.au}
 }
 
 %----------------------------------------------------------------------------------------
@@ -865,7 +866,7 @@ The sections above have dealt with calling somatic variants from the first 10Mb 
 For this section, we will use \textbf{all} variants from the first 60Mb of chromosome 5 produced using the GATK HaplotypeCaller variant caller on both the normal and tumour genomes to produce GVCF files which are fed into GATK GenotypeGVCFs to produce a merged VCF file. We will be using a pre-generated VCF file as we are primarily interested in the annotation of these variants rather than their generation. The annotation method we will use is called \textbf{Variant Effect Predictor} or VEP for short and is available from Ensembl here: \url{http://ensembl.org/info/docs/tools/vep/index.html}{http://ensembl.org/info/docs/tools/vep/index.html}.
 
 \begin{steps}
-Our pre-generated VCF file is located in the [TODO] folder. Lets have a quick look at the variants:
+Our pre-generated VCF file is located in the \texttt{variants} folder. Lets have a quick look at the variants:
 \begin{lstlisting}
 zless /variants/SM.merged.mrkdup.realn.chr5.60Mb.vcf.gz
 \end{lstlisting}
@@ -902,20 +903,20 @@ grep '5\textbackslash s174106\textbackslash s' variants/SM.merged.mrkdup.realn.c
 \end{steps}
 
 These commands give us the original variant:
-5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ_MEAN=127.00;GQ_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
+5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ\_MEAN=127.00;GQ\_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
 
 and the same variant annotated is:
-5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ\_MEAN=127.00;GQ\_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446;CSQ=missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding,non\_coding\_transcript\_exon\_variant&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
+5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ\_MEAN=127.00;GQ\_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446;CSQ=missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding,non\_coding\_transcript\_exon\_variant\&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
 
 You can see that VEP has added:
-CSQ=missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding,non\_coding\_transcript\_exon\_variant&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron
+CSQ=missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding,non\_coding\_transcript\_exon\_variant\&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron
 
 This is further composed of two annotations for this variant:
 missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding
 
 and
 
-non\_coding\_transcript\_exon\_variant&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron
+non\_coding\_transcript\_exon\_variant\&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron
 
 The first of these is saying that this variant is a missense variant in the gene PLEKHG4B for the transcript ENST00000283426 and the second that it is also a non\_coding\_transcript\_exon\_variant in the transcript ENST00000504041.
 
@@ -971,7 +972,8 @@ Notice that we have added a WHERE statement which restricts the rows that are re
 \begin{steps}
 Let's now look at the variants returned for this query:
 \begin{lstlisting}
-run [TODO]/gemini-result-highmedimpact-rare.tsv
+libreoffice --calc variants/gemini-result.tsv
+Tick the "Tab" under "Separated by" on the dialog window that comes up.
 \end{lstlisting}
 \end{steps}
 
@@ -991,7 +993,7 @@ GEMINI allows you to filter your variants based on any column that you see in th
 
 %TODO Change to using BiBTeX
 \begin{enumerate}
-  \item Ju YS1, Lee WC, Shin JY, Lee S, Bleazard T, Won JK, Kim YT, Kim JI, Kang JH, Seo JS. A transforming KIF5B and RET gene fusion in lung adenocarcinoma revealed from whole-genome and transcriptome sequencing. Genome Res. 2012 Mar;22(3):436-45. 
+  \item Paila U, Chapman BA, Kirchner R and Quinlan AR. "GEMINI: Integrative Exploration of Genetic Variation and Genome Annotations". PLoS Comput Biol, 2013, 9(7): e1003153. doi:10.1371/journal.pcbi.1003153
 \end{enumerate}
 
 \section{Acknowledgements}
