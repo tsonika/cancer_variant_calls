@@ -868,7 +868,7 @@ The sections above have dealt with calling somatic variants from the first 10Mb 
 For this section, we will use \textbf{all} variants from the first 60Mb of chromosome 5 that have been pre-generated using the GATK HaplotypeCaller variant caller on both the normal and tumour genomes. The output of this was GVCF files which were fed into GATK GenotypeGVCFs to produce a merged VCF file. We will use this pre-generated file as we are primarily interested in the annotation of variants rather than their generation. The annotation method we will use is called \textbf{Variant Effect Predictor} or VEP for short and is available from Ensembl here: \url{http://ensembl.org/info/docs/tools/vep/index.html}.
 
 \begin{steps}
-Our pre-generated VCF file is located in the \texttt{variants} folder. Lets have a quick look at the variants:
+Our pre-generated VCF file is located in the \texttt{variants} folder. Let's have a quick look at the variants:
 \begin{lstlisting}
 zless variants/HC.chr5.60Mb.vcf.gz
 \end{lstlisting}
@@ -887,16 +887,16 @@ perl Applications/ensembl-tools/scripts/variant_effect_predictor/variant_effect_
 VEP will take approximately 10 minutes to run and once it is finished you will have a new VCF file with all of the information in the input file but with added annotations in the INFO block. VEP also produces an HTML report summarising the distribution and impact of variants identified.
 
 \begin{steps}
-Once VEP is done running, lets first look at the HTML report it produced with the following command:
+Once VEP is done running, let's first look at the HTML report it produced with the following command:
 \begin{lstlisting}
 firefox variants/HC.chr5.60Mb.vep.html
 \end{lstlisting}
 \end{steps}
 
-This report shows information on the VEP run, the number of variants, the classes of variants detected, the variant consequences and the distributions of variants through the genome.
+This report shows information on the VEP run, the number of variants, the classes of variants detected, the variant consequences and the distributions of variants through the genome. Close Firefox to resume the terminal prompt.
 
 \begin{steps}
-Now lets look at the variant annotations that VEP has added to the VCF file by focussing on a single variant. Lets fetch one variant from the original VCF file and the annotated VCF file.
+Now let's look at the variant annotations that VEP has added to the VCF file by focussing on a single variant. Let's fetch the same variant from the original VCF file and the annotated VCF file to see what has been changed.
 \begin{lstlisting}
 zcat variants/HC.chr5.60Mb.vcf.gz | grep '5\s174106\s'
 grep '5\s174106\s' variants/HC.chr5.60Mb.vep.vcf
@@ -946,7 +946,7 @@ We now have a VCF file where each variant has been annotated with one or more im
 Luckily, such a free tool exists and is called GEMINI. GEMINI takes as an input your annotated VCF file and creates a database file which it can then query using Structured Query Language (SQL) commands. Not only does GEMINI make your variants easily searchable, it also brings in many external annotations to add more information about your variants (such as their frequencies in international databases).
 
 \begin{steps}
-To get started with GEMINI, lets make a database out of our annotated VCF file.
+To get started with GEMINI, let's make a database out of our annotated VCF file.
 \begin{lstlisting}
 gemini load -v variants/HC.chr5.60Mb.vep.vcf --cores 4 --skip-gerp-bp --skip-cadd -t VEP variants/HC.chr5.60Mb.vep.vcf.db
 \end{lstlisting}
@@ -954,7 +954,7 @@ gemini load -v variants/HC.chr5.60Mb.vep.vcf --cores 4 --skip-gerp-bp --skip-cad
 
 This will take approximately 10 minutes. You will see a few errors due to multiallelic sites, normally these sites are decomposed and normalized before creating the GEMINI database but this is outside the scope of this workshop.
 
-Once the database has been created lets run a basic query to see what kind of information we get out of GEMINI.
+Once the database has been created let's run a basic query to see what kind of information we get out of GEMINI.
 
 \begin{steps}
 \begin{lstlisting}
@@ -962,9 +962,9 @@ gemini query -q "SELECT *, (gts).(*), (gt_types).(*), (gt_depths).(*), (gt_ref_d
 \end{lstlisting}
 \end{steps}
 
-This will output a bunch of ordered information for your query, this is usually saved to a TSV file and opened in a spreadsheet as we will do for the next query. In the mean time, lets dissect this query to understand the syntax we need to use to filter our variants. First, we have a SELECT statement which simply specifies that we want to select data from the database. The following comma-separated values are the columns that we want to output from the database, in this case we are selecting all columns with the star character and then all sub-columns for each sample with the other values. Then, we have a "FROM variants" statement which is specifying the table within the database that we want to fetch information from. Finally, the "LIMIT 10" statement specifies that no more than 10 rows should be returned. In summary then, we are asking for all columns for 10 rows from the table variants.
+This will output a bunch of ordered information for your query to the command line, this is usually saved to a TSV file and opened in a spreadsheet as we will do for the next query. In the mean time, let's dissect this query to understand the syntax we need to use to filter our variants. First, we have a SELECT statement which simply specifies that we want to select data from the database. The following comma-separated values are the columns that we want to output from the database, in this case we are selecting all columns with the star character and then all sub-columns for each sample with the other values. Then, we have a "FROM variants" statement which is specifying the table within the database that we want to fetch information from. Finally, the "LIMIT 10" statement specifies that no more than 10 rows should be returned. In summary then, we are asking for all columns for 10 rows from the table \texttt{variants}. If you haven't used SQL before don't worry, the GEMINI website is very helpful and provides many examples for how to query your database.
 
-Lets now perform a more interesting query to find variants that have a medium or high impact on a gene and are rare or not present in existing international allele frequency databases. We will save the output of this query to a file and open it up in a spreadsheet.
+Let's now perform a more interesting query to find variants that have a medium or high impact on a gene and are rare or not present in existing international allele frequency databases. We will save the output of this query to a file and open it up in a spreadsheet.
 
 \begin{steps}
 \begin{lstlisting}
@@ -975,16 +975,16 @@ gemini query -q "SELECT *, (gts).(*), (gt_types).(*), (gt_depths).(*), (gt_ref_d
 Notice that we have added a WHERE statement which restricts the rows that are returned based on values that we specify for specific columns. Here, we are asking to return variants where their impact on the gene (impact\_severity column) is medium or high and the allele frequency in 1000Genomes, ESP and EXaC is less than 1\% or the variant is not present in any of these databases.
 
 \begin{steps}
-Now lets open the result in a spreadsheet to look at the annotations:
+Now let's open the result in a spreadsheet to look at the annotations:
 \begin{lstlisting}
 libreoffice --calc variants/gemini-result.tsv
 Tick the "Tab" under "Separated by" on the dialog window that comes up.
 \end{lstlisting}
 \end{steps}
 
-You can see that the first 14 columns contain information on the variant including its location, ref, alt, dbSNP ID, quality and type. Slowly scroll to the right and look at the columns of data that are provided. Most importantly, column BD includes the gene this variant impacts, BN the impact itself and BP the impact severity. Scroll towards the end of the spreadsheet until you get to columns ED and EE, these contain the genotype for each of the samples. Columns EH and EI contain the total depth for each variant in each sample and the 4 following columns contain the reference and alternate depths for each sample. Finally, columns EN and EO contain the genotype qualities (from the GQ field in the VCF) for each sample. As you scroll back and forth through this spreadsheet, you will see that GEMINI brings in information from a variety of sources including: OMIM, ClinVar, GERP, PolyPhen 2, SIFT, ESP, 1000 Genomes, ExAC, ENCODE, CADD and more! We are only looking at a small number of variants from the start of a chromosome so not many of these annotations will be present.
+You can see that the first 14 columns contain information on the variant including its location, ref, alt, dbSNP ID, quality and type. Slowly scroll to the right and look at the columns of data that are provided. Most importantly, column BD includes the gene this variant impacts, BN the impact itself and BP the impact severity. Scroll towards the end of the spreadsheet until you get to columns ED and EE, these contain the genotype for each of the samples. Columns EH and EI contain the total depth for each variant in each sample and the 4 following columns contain the reference and alternate depths for each sample. Finally, columns EN and EO contain the genotype qualities (from the GQ field in the VCF) for each sample. As you scroll back and forth through this spreadsheet, you will see that GEMINI brings in information from a variety of sources including: OMIM, ClinVar, GERP, PolyPhen 2, SIFT, ESP, 1000 Genomes, ExAC, ENCODE, CADD and more! We are only looking at a small number of variants from the start of a chromosome so not many of these annotations will be present but in a full genome database they are incredibly useful.
 
-GEMINI allows you to filter your variants based on any column that you see in the results files. For example, you may want all variants in a specific gene, in which case you would simply add "WHERE gene = 'BRCA1'" to your query. For complete documentation with many examples of queries, see the GEMINI documentation here: \url{http://gemini.readthedocs.org}.
+GEMINI allows you to filter your variants based on any column that you see in this results file. For example, you may want all variants in a specific gene, in which case you would simply add "WHERE gene = 'BRCA1'" to your query. For complete documentation with many examples of queries, see the GEMINI documentation here: \url{http://gemini.readthedocs.org}.
 
 %----------------------------------------------------------------------------------------
 
