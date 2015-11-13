@@ -66,7 +66,10 @@ After completing this practical the trainee should be able to:
     \url{https://sites.google.com/site/strelkasomaticvariantcaller/}
   \item[VarScan2] \hfill\\
     \url{https://github.com/dkoboldt/varscan/}
-
+  \item[Variant Effect Predictor] \hfill\\
+    \url{http://www.ensembl.org/info/docs/tools/vep}
+  \item[GEMINI] \hfill\\
+    \url{http://gemini.readthedocs.org}
 \end{description}
 
 %------------------------------------------------
@@ -858,11 +861,11 @@ Explore/play with the data: \\
 
 \section{Variant Annotation}
 
-Following variant calling, we end up with a VCF file of genomic coordinates with the genotype(s) and quality information for each variant. By itself, this information is not much use to us unless there is a specific genomic location we are interested in. Generally, we next want to annotate these variants to determine whether they impact any genes and if so what is their level of impact (e.g. are they causing a premature stop codon gain or are they missense mutations).
+Following variant calling, we end up with a VCF file of genomic coordinates with the genotype(s) and quality information for each variant. By itself, this information is not much use to us unless there is a specific genomic location we are interested in. Generally, we next want to annotate these variants to determine whether they impact any genes and if so what is their level of impact (e.g. are they causing a premature stop codon gain or are they likely less harmful missense mutations).
 
 The sections above have dealt with calling somatic variants from the first 10Mb of chromosome 4. This is important in finding variants that are unique to the tumour sample(s) and may have driven both tumour growth and/or metastasis. An important secondary question is whether the germline genome of the patient contains any variants that may have contributed to the development of the initial tumour through predisposing the patient to cancer. These variants \textit{may not} be captured by somatic variant analysis as their allele frequency may not change in the tumour genome compared with the normal.
 
-For this section, we will use \textbf{all} variants from the first 60Mb of chromosome 5 produced using the GATK HaplotypeCaller variant caller on both the normal and tumour genomes to produce GVCF files which are fed into GATK GenotypeGVCFs to produce a merged VCF file. We will be using a pre-generated VCF file as we are primarily interested in the annotation of these variants rather than their generation. The annotation method we will use is called \textbf{Variant Effect Predictor} or VEP for short and is available from Ensembl here: \url{http://ensembl.org/info/docs/tools/vep/index.html}{http://ensembl.org/info/docs/tools/vep/index.html}.
+For this section, we will use \textbf{all} variants from the first 60Mb of chromosome 5 that have been pre-generated using the GATK HaplotypeCaller variant caller on both the normal and tumour genomes. The output of this was GVCF files which were fed into GATK GenotypeGVCFs to produce a merged VCF file. We will use this pre-generated file as we are primarily interested in the annotation of variants rather than their generation. The annotation method we will use is called \textbf{Variant Effect Predictor} or VEP for short and is available from Ensembl here: \url{http://ensembl.org/info/docs/tools/vep/index.html}.
 
 \begin{steps}
 Our pre-generated VCF file is located in the \texttt{variants} folder. Lets have a quick look at the variants:
@@ -876,7 +879,7 @@ Notice how there are two genotype blocks at the end of each line for the normal 
 Let's now run VEP on this VCF file to annotate each variant with its impact(s) on the genome.
 
 \begin{steps}
-\begin{lstlisting}
+\begin{lstlisting}[breaklines=true]
 perl Applications/ensembl-tools/scripts/variant_effect_predictor/variant_effect_predictor.pl -i variants/HC.chr5.60Mb.vcf.gz --vcf -o variants/HC.chr5.60Mb.vep.vcf --stats_file variants/HC.chr5.60Mb.vep.html --format vcf --offline -fork 4 --fasta ref/human_g1k_v37.fasta --fields Consequence,Codons,Amino_acids,Gene,SYMBOL,Feature,EXON,PolyPhen,SIFT,Protein_position,BIOTYPE
 \end{lstlisting}
 \end{steps}
@@ -895,26 +898,40 @@ This report shows information on the VEP run, the number of variants, the classe
 \begin{steps}
 Now lets look at the variant annotations that VEP has added to the VCF file by focussing on a single variant. Lets fetch one variant from the original VCF file and the annotated VCF file.
 \begin{lstlisting}
-zcat variants/HC.chr5.60Mb.vcf.gz | grep '5\textbackslash s174106\textbackslash s'
-grep '5\textbackslash s174106\textbackslash s' variants/HC.chr5.60Mb.vep.vcf
+zcat variants/HC.chr5.60Mb.vcf.gz | grep '5\s174106\s'
+grep '5\s174106\s' variants/HC.chr5.60Mb.vep.vcf
 \end{lstlisting}
 \end{steps}
 
 These commands give us the original variant:
+
+\begin{lstlisting}[breaklines=true]
 5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ\_MEAN=127.00;GQ\_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
+\end{lstlisting}
 
 and the same variant annotated is:
+
+\begin{lstlisting}[breaklines=true]
 5	174106	.	G	A	225.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.22;ClippingRankSum=0.811;DP=21;FS=0.000;GQ\_MEAN=127.00;GQ\_STDDEV=62.23;MLEAC=2;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.322;NCC=0;QD=10.74;ReadPosRankSum=0.377;SOR=0.446;CSQ=missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding,non\_coding\_transcript\_exon\_variant\&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron	GT:AD:DP:GQ:PL	0/1:7,6:13:99:171,0,208	0/1:5,3:8:83:83,0,145
+\end{lstlisting}
 
 You can see that VEP has added:
+
+\begin{lstlisting}[breaklines=true]
 CSQ=missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding,non\_coding\_transcript\_exon\_variant\&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron
+\end{lstlisting}
 
 This is further composed of two annotations for this variant:
+
+\begin{lstlisting}[breaklines=true]
 missense\_variant|cGg/cAg|R/Q|ENSG00000153404|PLEKHG4B|ENST00000283426|16/18|||1076|protein\_coding
+\end{lstlisting}
 
 and
 
+\begin{lstlisting}[breaklines=true]
 non\_coding\_transcript\_exon\_variant\&non\_coding\_transcript\_variant|||ENSG00000153404|PLEKHG4B|ENST00000504041|5/8||||retained\_intron
+\end{lstlisting}
 
 The first of these is saying that this variant is a missense variant in the gene PLEKHG4B for the transcript ENST00000283426 and the second that it is also a non\_coding\_transcript\_exon\_variant in the transcript ENST00000504041.
 
@@ -924,7 +941,7 @@ The first of these is saying that this variant is a missense variant in the gene
 
 \section{Variant Filtration}
 
-We now have a VCF file where each variant has been annotated with one or more impacts on one or more genes. In a typical cancer genome, this means you will have about 4-5 million variants, and therefore rows, in a VCF file which takes up gigabytes of space. In our small example, we have just 100,000 variants which is already too large to make any kind of meaningful sense out of by just opening up the VCF file in a text editor. We need a solution that allows us to perform intelligent queries on our variants to search this mass of noise for the signal we are interested in.
+We now have a VCF file where each variant has been annotated with one or more impacts for one or more genes. In a typical whole cancer genome, you will have about 4-5 million variants, and therefore rows, in a VCF file which takes up gigabytes of space. In our small example, we have just 100,000 variants which is already too large to make any kind of meaningful sense out of by just opening up the VCF file in a text editor. We need a solution that allows us to perform intelligent queries on our variants to search this mass of noise for the signal we are interested in.
 
 Luckily, such a free tool exists and is called GEMINI. GEMINI takes as an input your annotated VCF file and creates a database file which it can then query using Structured Query Language (SQL) commands. Not only does GEMINI make your variants easily searchable, it also brings in many external annotations to add more information about your variants (such as their frequencies in international databases).
 
@@ -967,7 +984,7 @@ Tick the "Tab" under "Separated by" on the dialog window that comes up.
 
 You can see that the first 14 columns contain information on the variant including its location, ref, alt, dbSNP ID, quality and type. Slowly scroll to the right and look at the columns of data that are provided. Most importantly, column BD includes the gene this variant impacts, BN the impact itself and BP the impact severity. Scroll towards the end of the spreadsheet until you get to columns ED and EE, these contain the genotype for each of the samples. Columns EH and EI contain the total depth for each variant in each sample and the 4 following columns contain the reference and alternate depths for each sample. Finally, columns EN and EO contain the genotype qualities (from the GQ field in the VCF) for each sample. As you scroll back and forth through this spreadsheet, you will see that GEMINI brings in information from a variety of sources including: OMIM, ClinVar, GERP, PolyPhen 2, SIFT, ESP, 1000 Genomes, ExAC, ENCODE, CADD and more! We are only looking at a small number of variants from the start of a chromosome so not many of these annotations will be present.
 
-GEMINI allows you to filter your variants based on any column that you see in the results files. For example, you may want all variants in a specific gene, in which case you would simply add "WHERE gene = 'BRCA1' to your query. For complete documentation with many examples of queries, see the GEMINI documentation here: \url{http://gemini.readthedocs.org}{http://gemini.readthedocs.org}.
+GEMINI allows you to filter your variants based on any column that you see in the results files. For example, you may want all variants in a specific gene, in which case you would simply add "WHERE gene = 'BRCA1'" to your query. For complete documentation with many examples of queries, see the GEMINI documentation here: \url{http://gemini.readthedocs.org}.
 
 %----------------------------------------------------------------------------------------
 
@@ -982,7 +999,8 @@ GEMINI allows you to filter your variants based on any column that you see in th
 %TODO Change to using BiBTeX
 \begin{enumerate}
   \item Paila U, Chapman BA, Kirchner R and Quinlan AR. "GEMINI: Integrative Exploration of Genetic Variation and Genome Annotations". PLoS Comput Biol, 2013, 9(7): e1003153. doi:10.1371/journal.pcbi.1003153
+  \item McLaren W, Pritchard B, Rios D, Chen Y, Flicek P and Cunningham F. "Deriving the consequences of genomic variants with the Ensembl API and SNP Effect Predictor". Bioinformatics, 2010, 26(16):2069-70, doi:10.1093/bioinformatics/btq330
 \end{enumerate}
 
 \section{Acknowledgements}
-This tutorial is an adaptation of the one created by Louis letourneau \url[https://github.com/lletourn/Workshops/tree/ebiCancerWorkshop201407doc/01-SNVCalling.md]. I would like to thank and acknowledge Louis for this help and for sharing his material. The format of the tutorial has been inspired from Mar Gonzalez Porta. I also want to acknowledge Joel Fillon, Louis Letrouneau (again), Francois Lefebvre, Maxime Caron and Guillaume Bourque for the help in building these pipelines and working with all the various datasets.
+This tutorial is an adaptation of the one created by Louis letourneau \url{https://github.com/lletourn/Workshops/tree/ebiCancerWorkshop201407doc/01-SNVCalling.md}. I would like to thank and acknowledge Louis for this help and for sharing his material. The format of the tutorial has been inspired from Mar Gonzalez Porta. I also want to acknowledge Joel Fillon, Louis Letrouneau (again), Francois Lefebvre, Maxime Caron and Guillaume Bourque for the help in building these pipelines and working with all the various datasets.
