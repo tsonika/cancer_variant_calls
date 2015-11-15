@@ -69,6 +69,9 @@ btp::modules:
       propane.pdb: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/molecules'
         targets: 'alignment/molecules/propane.pdb'
+      snv_preprocessed.tar.gz: 
+        source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/'
+        targets: 'alignment/snv_preprocessed.tar.gz'
       commands.sh: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/'
         targets: 'alignment/commands.sh'
