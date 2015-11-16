@@ -12,7 +12,7 @@ btp::modules:
       normal.sorted.bam: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/alignment/normal'
         targets: 
-          - 'snv/valignment/normal/normal.sorted.bam'
+          - 'snv/alignment/normal/normal.sorted.bam'
       normal.sorted.bam.bai: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/alignment/normal'
         targets: 
@@ -86,6 +86,6 @@ btp::modules:
         targets: 
           - 'snv/molecules/propane.pdb'
       commands.sh: 
-        source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/'
+        source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv'
         targets: 
           - 'snv/commands.sh'
