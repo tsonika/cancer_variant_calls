@@ -2,76 +2,90 @@ btp::modules:
   snv:
     dirs:
       - 'snv'
-      - 'alignment'
-      - 'alignment/normal'
-      - 'alignment/tumour'
-      - 'alignment/ref'
-      - 'alignment/variants'
-      - 'alignment/molecules'
+      - 'snv/alignment'
+      - 'snv/alignment/normal'
+      - 'snv/alignment/tumour'
+      - 'snv/ref'
+      - 'snv/variants'
+      - 'snv/molecules'
     data:
       normal.sorted.bam: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/alignment/normal'
-        targets: 'alignment/normal/normal.sorted.bam'
+        targets: 
+          - 'snv/valignment/normal/normal.sorted.bam'
       normal.sorted.bam.bai: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/alignment/normal'
-        targets: 'alignment/normal/normal.sorted.bam.bai'
+        targets: 
+          - 'snv/alignment/normal/normal.sorted.bam.bai'
       tumour.sorted.bam: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/alignment/tumour'
-        targets: 'alignment/tumour/tumour.sorted.bam'
+        targets: 
+          - 'snv/alignment/tumour/tumour.sorted.bam'
       tumour.sorted.bam.bai: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/alignment/tumour'
-        targets: 'alignment/tumour/tumour.sorted.bam.bai'
-      gemini.tar.gz: 
-        source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv'
-        targets: 'alignment/gemini.tar.gz'
+        targets: 
+          - 'snv/alignment/tumour/tumour.sorted.bam.bai'
       dbSnp-138_chr4.vcf: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/ref'
-        targets: 'alignment/ref/dbSnp-138_chr4.vcf'
+        targets: 
+          - 'snv/ref/dbSnp-138_chr4.vcf'
       dbSnp-138_chr4.vcf.idx: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/ref'
-        targets: 'alignment/ref/dbSnp-138_chr4.vcf.idx'
+        targets: 
+          - 'snv/ref/dbSnp-138_chr4.vcf.idx'
       human_g1k_v37.dict: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/ref'
-        targets: 'alignment/ref/human_g1k_v37.dict'
+        targets: 
+          - 'snv/ref/human_g1k_v37.dict'
       human_g1k_v37.fasta: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/ref'
-        targets: 'alignment/ref/human_g1k_v37.fasta'
+        targets: 
+          - 'snv/ref/human_g1k_v37.fasta'
       human_g1k_v37.fasta.fai: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/ref'
-        targets: 'alignment/ref/human_g1k_v37.fasta.fai'
+        targets: 
+          - 'snv/ref/human_g1k_v37.fasta.fai'
       human_g1k_v37.fasta.index: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/ref'
-        targets: 'alignment/ref/human_g1k_v37.fasta.index'
+        targets: 
+          - 'snv/ref/human_g1k_v37.fasta.index'
       human_g1k_v37.intervals: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/ref'
-        targets: 'alignment/ref/human_g1k_v37.intervals'
+        targets: 
+          - 'snv/ref/human_g1k_v37.intervals'
       HC.chr5.60Mb.vcf.gz: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/variants'
-        targets: 'alignment/variants/HC.chr5.60Mb.vcf.gz'
+        targets: 
+          - 'snv/variants/HC.chr5.60Mb.vcf.gz'
       cubane.pdb: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/molecules'
-        targets: 'alignment/molecules/cubane.pdb'
+        targets: 
+          - 'snv/molecules/cubane.pdb'
       ethane.pdb: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/molecules'
-        targets: 'alignment/molecules/ethane.pdb'
+        targets: 
+          - 'snv/molecules/ethane.pdb'
       lengths: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/molecules'
-        targets: 'alignment/molecules/lengths'
+        targets: 
+          - 'snv/molecules/lengths'
       methane.pdb: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/molecules'
-        targets: 'alignment/molecules/methane.pdb'
+        targets: 
+          - 'snv/molecules/methane.pdb'
       octane.pdb: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/molecules'
-        targets: 'alignment/molecules/octane.pdb'
+        targets: 
+          - 'snv/molecules/octane.pdb'
       pentane.pdb: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/molecules'
-        targets: 'alignment/molecules/pentane.pdb'
+        targets: 
+          - 'snv/molecules/pentane.pdb'
       propane.pdb: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/molecules'
-        targets: 'alignment/molecules/propane.pdb'
-      snv_preprocessed.tar.gz: 
-        source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/'
-        targets: 'alignment/snv_preprocessed.tar.gz'
+        targets: 
+          - 'snv/molecules/propane.pdb'
       commands.sh: 
         source: 'https://s3-ap-southeast-2.amazonaws.com/cancer-data-snv/'
-        targets: 'alignment/commands.sh'
+        targets: 
+          - 'snv/commands.sh'
