@@ -865,7 +865,7 @@ Following variant calling, we end up with a VCF file of genomic coordinates with
 
 The sections above have dealt with calling somatic variants from the first 10Mb of chromosome 4. This is important in finding variants that are unique to the tumour sample(s) and may have driven both tumour growth and/or metastasis. An important secondary question is whether the germline genome of the patient contains any variants that may have contributed to the development of the initial tumour through predisposing the patient to cancer. These variants \textit{may not} be captured by somatic variant analysis as their allele frequency may not change in the tumour genome compared with the normal.
 
-For this section, we will use \textbf{all} variants from the first 60Mb of chromosome 5 that have been pre-generated using the GATK HaplotypeCaller variant caller on both the normal and tumour genomes. The output of this was GVCF files which were fed into GATK GenotypeGVCFs to produce a merged VCF file. We will use this pre-generated file as we are primarily interested in the annotation of variants rather than their generation. The annotation method we will use is called \textbf{Variant Effect Predictor} or VEP for short and is available from Ensembl here: \url{http://ensembl.org/info/docs/tools/vep/index.html}.
+For this section, we will use \textbf{all} variants from the first 60Mb of chromosome 5 that have been pre-generated using the GATK HaplotypeCaller variant caller on both the normal and tumour genomes. The output of this was GVCF files which were fed into GATK GenotypeGVCFs to produce a merged VCF file. We will use this pre-generated file as we are primarily interested in the annotation of variants rather than their generation. The annotation method we will use is called \textbf{Variant Effect Predictor} or VEP for short and is available from Ensembl here: \url{http://ensembl.org/info/docs/tools/vep/index.html}.\\
 
 \begin{steps}
 Our pre-generated VCF file is located in the \texttt{variants} folder. Let's have a quick look at the variants:
@@ -874,17 +874,16 @@ zless variants/HC.chr5.60Mb.vcf.gz
 \end{lstlisting}
 \end{steps}
 
-Notice how there are two genotype blocks at the end of each line for the normal (Blood) and tumour (liverMets) samples.
-
-Let's now run VEP on this VCF file to annotate each variant with its impact(s) on the genome.
+Notice how there are two genotype blocks at the end of each line for the normal (Blood) and tumour (liverMets) samples.\\
 
 \begin{steps}
+Let's now run VEP on this VCF file to annotate each variant with its impact(s) on the genome:
 \begin{lstlisting}[breaklines=true,breakatwhitespace=false]
 perl Applications/ensembl-tools/scripts/variant_effect_predictor/variant_effect_predictor.pl -i variants/HC.chr5.60Mb.vcf.gz --vcf -o variants/HC.chr5.60Mb.vep.vcf --stats_file variants/HC.chr5.60Mb.vep.html --format vcf --offline -fork 4 --fasta ref/human_g1k_v37.fasta --fields Consequence,Codons,Amino_acids,Gene,SYMBOL,Feature,EXON,PolyPhen,SIFT,Protein_position,BIOTYPE
 \end{lstlisting}
 \end{steps}
 
-VEP will take approximately 10 minutes to run and once it is finished you will have a new VCF file with all of the information in the input file but with added annotations in the INFO block. VEP also produces an HTML report summarising the distribution and impact of variants identified.
+VEP will take approximately 10 minutes to run and once it is finished you will have a new VCF file with all of the information in the input file but with added annotations in the INFO block. VEP also produces an HTML report summarising the distribution and impact of variants identified.\\
 
 \begin{steps}
 Once VEP is done running, let's first look at the HTML report it produced with the following command:
@@ -893,7 +892,7 @@ firefox variants/HC.chr5.60Mb.vep.html
 \end{lstlisting}
 \end{steps}
 
-This report shows information on the VEP run, the number of variants, the classes of variants detected, the variant consequences and the distributions of variants through the genome. Close Firefox to resume the terminal prompt.
+This report shows information on the VEP run, the number of variants, the classes of variants detected, the variant consequences and the distributions of variants through the genome. Close Firefox to resume the terminal prompt.\\
 
 \begin{steps}
 Now let's look at the variant annotations that VEP has added to the VCF file by focussing on a single variant. Let's fetch the same variant from the original VCF file and the annotated VCF file to see what has been changed.
@@ -943,36 +942,34 @@ The first of these is saying that this variant is a missense variant in the gene
 
 We now have a VCF file where each variant has been annotated with one or more impacts for one or more genes. In a typical whole cancer genome, you will have about 4-5 million variants, and therefore rows, in a VCF file which takes up gigabytes of space. In our small example, we have just 100,000 variants which is already too large to make any kind of meaningful sense out of by just opening up the VCF file in a text editor. We need a solution that allows us to perform intelligent queries on our variants to search this mass of noise for the signal we are interested in.
 
-Luckily, such a free tool exists and is called GEMINI. GEMINI takes as an input your annotated VCF file and creates a database file which it can then query using Structured Query Language (SQL) commands. Not only does GEMINI make your variants easily searchable, it also brings in many external annotations to add more information about your variants (such as their frequencies in international databases).
+Luckily, such a free tool exists and is called GEMINI. GEMINI takes as an input your annotated VCF file and creates a database file which it can then query using Structured Query Language (SQL) commands. Not only does GEMINI make your variants easily searchable, it also brings in many external annotations to add more information about your variants (such as their frequencies in international databases).\\
 
 \begin{steps}
-To get started with GEMINI, let's make a database out of our annotated VCF file.
+To get started with GEMINI, let's make a database out of our annotated VCF file:
 \begin{lstlisting}
 gemini load -v variants/HC.chr5.60Mb.vep.vcf --cores 4 --skip-gerp-bp --skip-cadd -t VEP variants/HC.chr5.60Mb.vep.vcf.db
 \end{lstlisting}
 \end{steps}
 
-This will take approximately 10 minutes. You will see a few errors due to multiallelic sites, normally these sites are decomposed and normalized before creating the GEMINI database but this is outside the scope of this workshop.
-
-Once the database has been created let's run a basic query to see what kind of information we get out of GEMINI.
+This will take approximately 10 minutes. You will see a few errors due to multiallelic sites, normally these sites are decomposed and normalized before creating the GEMINI database but this is outside the scope of this workshop.\\
 
 \begin{steps}
+Once the database has been created let's run a basic query to see what kind of information we get out of GEMINI:
 \begin{lstlisting}
 gemini query -q "SELECT *, (gts).(*), (gt_types).(*), (gt_depths).(*), (gt_ref_depths).(*), (gt_alt_depths).(*), (gt_quals).(*) FROM variants LIMIT 10;" --header variants/HC.chr5.60Mb.vep.vcf.db
 \end{lstlisting}
 \end{steps}
 
-This will output a bunch of ordered information for your query to the command line, this is usually saved to a TSV file and opened in a spreadsheet as we will do for the next query. In the mean time, let's dissect this query to understand the syntax we need to use to filter our variants. First, we have a SELECT statement which simply specifies that we want to select data from the database. The following comma-separated values are the columns that we want to output from the database, in this case we are selecting all columns with the star character and then all sub-columns for each sample with the other values. Then, we have a "FROM variants" statement which is specifying the table within the database that we want to fetch information from. Finally, the "LIMIT 10" statement specifies that no more than 10 rows should be returned. In summary then, we are asking for all columns for 10 rows from the table \texttt{variants}. If you haven't used SQL before don't worry, the GEMINI website is very helpful and provides many examples for how to query your database.
-
-Let's now perform a more interesting query to find variants that have a medium or high impact on a gene and are rare or not present in existing international allele frequency databases. We will save the output of this query to a file and open it up in a spreadsheet.
+This will output a bunch of ordered information for your query to the command line, this is usually saved to a TSV file and opened in a spreadsheet as we will do for the next query. In the mean time, let's dissect this query to understand the syntax we need to use to filter our variants. First, we have a SELECT statement which simply specifies that we want to select data from the database. The following comma-separated values are the columns that we want to output from the database, in this case we are selecting all columns with the star character and then all sub-columns for each sample with the other values. Then, we have a "FROM variants" statement which is specifying the table within the database that we want to fetch information from. Finally, the "LIMIT 10" statement specifies that no more than 10 rows should be returned. In summary then, we are asking for all columns for 10 rows from the table \texttt{variants}. If you haven't used SQL before don't worry, the GEMINI website is very helpful and provides many examples for how to query your database.\\
 
 \begin{steps}
+Let's now perform a more interesting query to find variants that have a medium or high impact on a gene and are rare or not present in existing international allele frequency databases. We will save the output of this query to a file and open it up in a spreadsheet.
 \begin{lstlisting}
 gemini query -q "SELECT *, (gts).(*), (gt_types).(*), (gt_depths).(*), (gt_ref_depths).(*), (gt_alt_depths).(*), (gt_quals).(*) FROM variants WHERE (impact_severity = 'HIGH' OR impact_severity = 'MED') AND (aaf_1kg_all < 0.01 OR aaf_1kg_all is null) AND (aaf_esp_all < 0.01 OR aaf_esp_all is null) AND (aaf_exac_all < 0.01 OR aaf_exac_all is null);" --header variants/HC.chr5.60Mb.vep.vcf.db > variants/gemini-result.tsv
 \end{lstlisting}
 \end{steps}
 
-Notice that we have added a WHERE statement which restricts the rows that are returned based on values that we specify for specific columns. Here, we are asking to return variants where their impact on the gene (impact\_severity column) is medium or high and the allele frequency in 1000Genomes, ESP and EXaC is less than 1\% or the variant is not present in any of these databases.
+Notice that we have added a WHERE statement which restricts the rows that are returned based on values that we specify for specific columns. Here, we are asking to return variants where their impact on the gene (impact\_severity column) is medium or high and the allele frequency in 1000Genomes, ESP and EXaC is less than 1\% or the variant is not present in any of these databases.\\
 
 \begin{steps}
 Now let's open the result in a spreadsheet to look at the annotations:
