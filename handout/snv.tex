@@ -883,6 +883,23 @@ perl Applications/ensembl-tools/scripts/variant_effect_predictor/variant_effect_
 \end{lstlisting}
 \end{steps}
 
+\newpage
+
+Explanation of parameters:
+\begin{note}
+\begin{description}[style=multiline,labelindent=0cm,align=right,leftmargin=\descriptionlabelspace,rightmargin=1.5cm,font=\ttfamily]
+ \item[-i] the input VCF (gzipped)
+ \item[--vcf] the format of the input file
+ \item[-o] the filename of the output file
+ \item[--stats\_file] the filename of the VEP report
+ \item[--format] the format of the input file
+ \item[--offline] use local caches rather than querying the internet (which is much slower)
+ \item[-fork] how many threads to use
+ \item[--fasta] the reference genome
+ \item[--fields] the annotation fields to output and their order
+\end{description}
+\end{note}
+
 VEP will take approximately 10 minutes to run and once it is finished you will have a new VCF file with all of the information in the input file but with added annotations in the INFO block. VEP also produces an HTML report summarising the distribution and impact of variants identified.\\
 
 \begin{steps}
@@ -956,16 +973,16 @@ This will take approximately 10 minutes. You will see a few errors due to multia
 \begin{steps}
 Once the database has been created let's run a basic query to see what kind of information we get out of GEMINI:
 \begin{lstlisting}
-gemini query -q "SELECT *, (gts).(*), (gt_types).(*), (gt_depths).(*), (gt_ref_depths).(*), (gt_alt_depths).(*), (gt_quals).(*) FROM variants LIMIT 10;" --header variants/HC.chr5.60Mb.vep.vcf.db
+gemini query -q ``SELECT *, (gts).(*), (gt_types).(*), (gt_depths).(*), (gt_ref_depths).(*), (gt_alt_depths).(*), (gt_quals).(*) FROM variants LIMIT 10;" --header variants/HC.chr5.60Mb.vep.vcf.db
 \end{lstlisting}
 \end{steps}
 
-This will output a bunch of ordered information for your query to the command line, this is usually saved to a TSV file and opened in a spreadsheet as we will do for the next query. In the mean time, let's dissect this query to understand the syntax we need to use to filter our variants. First, we have a SELECT statement which simply specifies that we want to select data from the database. The following comma-separated values are the columns that we want to output from the database, in this case we are selecting all columns with the star character and then all sub-columns for each sample with the other values. Then, we have a "FROM variants" statement which is specifying the table within the database that we want to fetch information from. Finally, the "LIMIT 10" statement specifies that no more than 10 rows should be returned. In summary then, we are asking for all columns for 10 rows from the table \texttt{variants}. If you haven't used SQL before don't worry, the GEMINI website is very helpful and provides many examples for how to query your database.\\
+This will output a bunch of ordered information for your query to the command line, this is usually saved to a TSV file and opened in a spreadsheet as we will do for the next query. In the mean time, let's dissect this query to understand the syntax we need to use to filter our variants. First, we have a SELECT statement which simply specifies that we want to select data from the database. The following comma-separated values are the columns that we want to output from the database, in this case we are selecting all columns with the star character and then all sub-columns for each sample with the other values. Then, we have a ``FROM variants" statement which is specifying the table within the database that we want to fetch information from. Finally, the ``LIMIT 10" statement specifies that no more than 10 rows should be returned. In summary then, we are asking for all columns for 10 rows from the table \texttt{variants}. If you haven't used SQL before don't worry, the GEMINI website is very helpful and provides many examples for how to query your database.\\
 
 \begin{steps}
 Let's now perform a more interesting query to find variants that have a medium or high impact on a gene and are rare or not present in existing international allele frequency databases. We will save the output of this query to a file and open it up in a spreadsheet.
 \begin{lstlisting}
-gemini query -q "SELECT *, (gts).(*), (gt_types).(*), (gt_depths).(*), (gt_ref_depths).(*), (gt_alt_depths).(*), (gt_quals).(*) FROM variants WHERE (impact_severity = 'HIGH' OR impact_severity = 'MED') AND (aaf_1kg_all < 0.01 OR aaf_1kg_all is null) AND (aaf_esp_all < 0.01 OR aaf_esp_all is null) AND (aaf_exac_all < 0.01 OR aaf_exac_all is null);" --header variants/HC.chr5.60Mb.vep.vcf.db > variants/gemini-result.tsv
+gemini query -q ``SELECT *, (gts).(*), (gt_types).(*), (gt_depths).(*), (gt_ref_depths).(*), (gt_alt_depths).(*), (gt_quals).(*) FROM variants WHERE (impact_severity = 'HIGH' OR impact_severity = 'MED') AND (aaf_1kg_all < 0.01 OR aaf_1kg_all is null) AND (aaf_esp_all < 0.01 OR aaf_esp_all is null) AND (aaf_exac_all < 0.01 OR aaf_exac_all is null);" --header variants/HC.chr5.60Mb.vep.vcf.db > variants/gemini-result.tsv
 \end{lstlisting}
 \end{steps}
 
@@ -975,13 +992,13 @@ Notice that we have added a WHERE statement which restricts the rows that are re
 Now let's open the result in a spreadsheet to look at the annotations:
 \begin{lstlisting}
 libreoffice --calc variants/gemini-result.tsv
-Tick the "Tab" under "Separated by" on the dialog window that comes up.
+Tick the ``Tab" under ``Separated by" on the dialog window that comes up.
 \end{lstlisting}
 \end{steps}
 
 You can see that the first 14 columns contain information on the variant including its location, ref, alt, dbSNP ID, quality and type. Slowly scroll to the right and look at the columns of data that are provided. Most importantly, column BD includes the gene this variant impacts, BN the impact itself and BP the impact severity. Scroll towards the end of the spreadsheet until you get to columns ED and EE, these contain the genotype for each of the samples. Columns EH and EI contain the total depth for each variant in each sample and the 4 following columns contain the reference and alternate depths for each sample. Finally, columns EN and EO contain the genotype qualities (from the GQ field in the VCF) for each sample. As you scroll back and forth through this spreadsheet, you will see that GEMINI brings in information from a variety of sources including: OMIM, ClinVar, GERP, PolyPhen 2, SIFT, ESP, 1000 Genomes, ExAC, ENCODE, CADD and more! We are only looking at a small number of variants from the start of a chromosome so not many of these annotations will be present but in a full genome database they are incredibly useful.
 
-GEMINI allows you to filter your variants based on any column that you see in this results file. For example, you may want all variants in a specific gene, in which case you would simply add "WHERE gene = 'BRCA1'" to your query. For complete documentation with many examples of queries, see the GEMINI documentation here: \url{http://gemini.readthedocs.org}.
+GEMINI allows you to filter your variants based on any column that you see in this results file. For example, you may want all variants in a specific gene, in which case you would simply add ``WHERE gene = 'BRCA1'" to your query. For complete documentation with many examples of queries, see the GEMINI documentation here: \url{http://gemini.readthedocs.org}.
 
 %----------------------------------------------------------------------------------------
 
@@ -995,8 +1012,8 @@ GEMINI allows you to filter your variants based on any column that you see in th
 
 %TODO Change to using BiBTeX
 \begin{enumerate}
-  \item Paila U, Chapman BA, Kirchner R and Quinlan AR. "GEMINI: Integrative Exploration of Genetic Variation and Genome Annotations". PLoS Comput Biol, 2013, 9(7): e1003153. doi:10.1371/journal.pcbi.1003153
-  \item McLaren W, Pritchard B, Rios D, Chen Y, Flicek P and Cunningham F. "Deriving the consequences of genomic variants with the Ensembl API and SNP Effect Predictor". Bioinformatics, 2010, 26(16):2069-70, doi:10.1093/bioinformatics/btq330
+  \item Paila U, Chapman BA, Kirchner R and Quinlan AR. ``GEMINI: Integrative Exploration of Genetic Variation and Genome Annotations". PLoS Comput Biol, 2013, 9(7): e1003153. doi:10.1371/journal.pcbi.1003153
+  \item McLaren W, Pritchard B, Rios D, Chen Y, Flicek P and Cunningham F. ``Deriving the consequences of genomic variants with the Ensembl API and SNP Effect Predictor". Bioinformatics, 2010, 26(16):2069-70, doi:10.1093/bioinformatics/btq330
 \end{enumerate}
 
 \section{Acknowledgements}
